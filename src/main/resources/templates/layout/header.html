@@ -1,9 +1,3 @@
-<!--
-  ✅ src/main/resources/templates/layout/header.html
-  - fragment 전용 파일
-  - head / header / searchModal / commonScript 만 제공
--->
-
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,111 +6,84 @@
         나의 스티커 다이어리
     </title>
 
-    <meta name="description" content="일상 속 영감을 저장하는 감성적인 공간">
-    <meta name="keywords" content="영감, 다이어리, 스티커, 감성, 브런치, 핀터레스트">
-    <meta name="author" content="나의 스티커 다이어리">
-
-    <meta property="og:title" th:content="${pageTitle != null ? pageTitle : '나의 스티커 다이어리'}">
-    <meta property="og:description" content="일상 속 영감을 저장하는 감성적인 공간">
-    <meta property="og:type" content="website">
-    <meta property="og:url" th:content="@{/}">
-
-    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-            href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- ✅ 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
 
-    <!-- ✅ Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- ✅ 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
     <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
 </head>
 
-<!-- =========================
-  Header Fragment
-========================= -->
 <div th:fragment="header"
      class="sticky top-0 z-50 bg-white backdrop-blur-md border-b border-[#E8D5C4]/30 transition-all duration-300">
     <div class="max-w-[1800px] mx-auto px-6 h-[72px] flex items-center justify-between">
 
-        <!-- Logo -->
         <a href="/" class="group flex items-center gap-2">
-            <div
-                    class="w-8 h-8 bg-[#D4C4B0] rounded-full flex items-center justify-center text-white font-serif italic text-lg group-hover:bg-[#C9B5A0] transition-colors">
+            <div class="w-8 h-8 bg-[#D4C4B0] rounded-full flex items-center justify-center text-white font-serif italic text-lg group-hover:bg-[#C9B5A0] transition-colors">
                 i
             </div>
-            <span
-                    class="text-xl font-semibold tracking-tight text-[#5A4D41] group-hover:text-[#3E342C] transition-colors"
-                    style="font-family: 'Playfair Display', serif;">
+            <span class="text-xl font-semibold tracking-tight text-[#5A4D41] group-hover:text-[#3E342C] transition-colors"
+                  style="font-family: 'Playfair Display', serif;">
                 나의 스티커 다이어리
             </span>
         </a>
 
-        <!-- Right buttons -->
         <div class="flex items-center gap-4">
             <button type="button"
                     onclick="openSearchModal()"
                     class="p-2 text-[#8B7355] hover:bg-[#F9F6F1] rounded-full transition-colors"
                     aria-label="Search">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
             </button>
 
-            <button type="button"
-                    class="p-2 text-[#8B7355] hover:bg-[#F9F6F1] rounded-full transition-colors"
-                    aria-label="User">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            </button>
+            <div class="relative" id="profileContainer">
+                <button type="button"
+                        id="profileIconBtn"
+                        onclick="toggleProfileMenu(event)"
+                        class="p-2 text-[#8B7355] hover:bg-[#F9F6F1] rounded-full transition-colors inline-flex items-center justify-center cursor-pointer"
+                        aria-label="User">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+
+                <div id="profileDropdown"
+                     class="hidden absolute right-0 mt-2 w-44 bg-white border border-[#E8D5C4]/30 rounded-xl shadow-lg py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+
+                    <div th:if="${session.loginUser == null}">
+                        <a th:href="@{/user/login}" class="block px-4 py-2 text-sm text-[#8B7355] hover:bg-[#F9F6F1]">로그인</a>
+                        <a th:href="@{/user/signup}" class="block px-4 py-2 text-sm text-[#8B7355] hover:bg-[#F9F6F1]">회원가입</a>
+                    </div>
+
+                    <div th:if="${session.loginUser != null}">
+                        <div class="px-4 py-1 text-[10px] text-[#A89080] font-bold uppercase tracking-wider">Account</div>
+                        <a th:href="@{/user/mypage}" class="block px-4 py-2 text-sm text-[#8B7355] hover:bg-[#F9F6F1] transition-colors">마이페이지</a>
+                        <div class="border-t border-[#E8D5C4]/20 my-1"></div>
+                        <a th:href="@{/user/logout}" class="block px-4 py-2 text-sm text-red-400 hover:bg-[#F9F6F1] transition-colors">로그아웃</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
 </div>
 
-<!-- =========================
-  Search Modal Fragment
-========================= -->
-<div th:fragment="searchModal"
-     id="searchModal"
-     class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
-         onclick="closeSearchModal()"></div>
-
-    <div id="searchContent"
-         class="absolute top-0 left-0 right-0 bg-white p-6 shadow-xl transform transition-transform duration-300 -translate-y-full">
+<div th:fragment="searchModal" id="searchModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onclick="closeSearchModal()"></div>
+    <div id="searchContent" class="absolute top-0 left-0 right-0 bg-white p-6 shadow-xl transform transition-transform duration-300 -translate-y-full">
         <div class="max-w-3xl mx-auto relative">
-            <input type="text"
-                   placeholder="영감을 검색해보세요..."
-                   class="w-full text-2xl font-light border-b-2 border-[#E8D5C4] py-4 focus:outline-none focus:border-[#D4C4B0] bg-transparent placeholder-[#D4C4B0]/50"
-                   style="font-family: 'Noto Sans KR', sans-serif;"
-                   autofocus
-            >
-            <button type="button"
-                    onclick="closeSearchModal()"
-                    class="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-[#A89080] hover:text-[#8B7355]"
-                    aria-label="Close search">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <input type="text" placeholder="영감을 검색해보세요..." class="w-full text-2xl font-light border-b-2 border-[#E8D5C4] py-4 focus:outline-none focus:border-[#D4C4B0] bg-transparent placeholder-[#D4C4B0]/50">
+            <button type="button" onclick="closeSearchModal()" class="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-[#A89080] hover:text-[#8B7355]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -125,18 +92,34 @@
     </div>
 </div>
 
-<!-- =========================
-  Common Script Fragment
-  (모달 open/close, create 이동 등)
-========================= -->
 <script th:fragment="commonScript" th:inline="javascript">
     /*<![CDATA[*/
+
+    // 1. 프로필 메뉴 토글 함수 (추가됨)
+    function toggleProfileMenu(event) {
+        event.stopPropagation(); // 버튼 클릭 시 window 클릭 이벤트가 실행되지 않도록 차단
+        const dropdown = document.getElementById('profileDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+        }
+    }
+
+    // 2. 바깥 영역 클릭 시 메뉴 닫기 (추가됨)
+    window.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('profileDropdown');
+        const container = document.getElementById('profileContainer');
+        if (dropdown && !container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
     function navigateToView(id) {
         window.location.href = `/posts/${id}`;
     }
 
+    // 400 에러 방지를 위해 write로 수정함
     function navigateToCreate() {
-        window.location.href = '/posts/create';
+        window.location.href = '/posts/write';
     }
 
     function openSearchModal() {
@@ -144,14 +127,9 @@
         const content = document.getElementById('searchContent');
         if (modal && content) {
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('-translate-y-full');
-            }, 10);
-
+            setTimeout(() => { content.classList.remove('-translate-y-full'); }, 10);
             const input = modal.querySelector('input');
             if (input) input.focus();
-
-            // 스크롤 방지(원하면 제거 가능)
             document.body.style.overflow = 'hidden';
         }
     }
@@ -169,4 +147,3 @@
     }
     /*]]>*/
 </script>
-
