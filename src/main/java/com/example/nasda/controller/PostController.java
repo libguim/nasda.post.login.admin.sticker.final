@@ -30,18 +30,7 @@ public class PostController {
     private final PostImageService postImageService;
     private final UserRepository userRepository;
 
-    // =========================
-    // 0) 홈 "/" = 게시글 목록
-    // =========================
-    @GetMapping("/")
-    public String home(Model model) {
-        model.addAttribute("posts", postService.getHomePosts());
 
-        String nickname = getCurrentNicknameOrNull();
-        model.addAttribute("username", nickname == null ? "게스트" : nickname);
-
-        return "index";
-    }
 
     // =========================
     // 0-1) /posts 접속은 홈으로 보내서 사실상 /posts 라우트 없애기
