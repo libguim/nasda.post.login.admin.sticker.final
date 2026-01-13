@@ -207,8 +207,18 @@
                                               th:action="@{/comments/{id}/delete(id=${c.id})}"
                                               method="post"
                                               class="inline-form">
-                                            <button type="submit" class="icon-btn btn-comment-delete" title="삭제">🗑️</button>
+
+                                            <!-- ✅ 현재 페이지 유지용 -->
+                                            <input type="hidden" name="page" th:value="${commentsPage != null ? commentsPage.number : 0}">
+                                            <input type="hidden" name="size" th:value="${commentsPage != null ? commentsPage.size : 5}">
+
+                                            <button type="submit"
+                                                    class="icon-btn btn-comment-delete"
+                                                    title="삭제">
+                                                🗑️
+                                            </button>
                                         </form>
+
 
                                         <!-- 신고 -->
                                         <button type="button"
@@ -223,7 +233,14 @@
                             <!-- ✅ 수정 모드 -->
                             <div class="comment-edit-box hidden">
                                 <form th:action="@{/comments/{id}/edit(id=${c.id})}" method="post">
-                                    <textarea class="comment-edit-textarea" name="content" maxlength="500"
+
+                                    <!-- ✅ 현재 페이지 유지용 -->
+                                    <input type="hidden" name="page" th:value="${commentsPage != null ? commentsPage.number : 0}">
+                                    <input type="hidden" name="size" th:value="${commentsPage != null ? commentsPage.size : 5}">
+
+                                    <textarea class="comment-edit-textarea"
+                                              name="content"
+                                              maxlength="500"
                                               th:text="${c.content}"></textarea>
 
                                     <div class="comment-edit-actions">
@@ -243,7 +260,7 @@
                     <!-- 이전 -->
                     <a class="btn-page"
                        th:if="${commentsPage.hasPrevious()}"
-                       th:href="@{/post/view.html(id=${post.id}, page=${commentsPage.number - 1}, size=${commentsPage.size})}">
+                       th:href="@{/posts/{id}(id=${post.id}, page=${commentsPage.number - 1}, size=${commentsPage.size})}">
                         이전
                     </a>
 
@@ -251,7 +268,7 @@
                     <th:block th:each="p : ${#numbers.sequence(0, commentsPage.totalPages - 1)}">
                         <a class="btn-page page-number"
                            th:classappend="${commentsPage.number == p} ? ' active' : ''"
-                           th:href="@{/post/view.html(id=${post.id}, page=${p}, size=${commentsPage.size})}"
+                           th:href="@{/posts/{id}(id=${post.id}, page=${p}, size=${commentsPage.size})}"
                            th:text="${p + 1}">
                             1
                         </a>
@@ -260,7 +277,7 @@
                     <!-- 다음 -->
                     <a class="btn-page"
                        th:if="${commentsPage.hasNext()}"
-                       th:href="@{/post/view.html(id=${post.id}, page=${commentsPage.number + 1}, size=${commentsPage.size})}">
+                       th:href="@{/posts/{id}(id=${post.id}, page=${commentsPage.number + 1}, size=${commentsPage.size})}">
                         다음
                     </a>
                 </div>

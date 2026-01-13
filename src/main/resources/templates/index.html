@@ -39,58 +39,58 @@
 </div>
 
 <main class="max-w-[1800px] mx-auto px-6 py-12">
-    <div id="masonryGrid" class="masonry-grid">
 
-        <!-- ✅ posts가 있을 때 -->
-        <a th:if="${posts != null and !posts.isEmpty()}"
-           th:each="post : ${posts}"
-           th:href="@{/posts/{id}(id=${post.id})}"
-           class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl"
-           style="background-color: #F9F6F1; display:block;">
+    <!-- ✅ 게시글 없을 때: 샘플 카드 제거하고 안내만 -->
+    <div th:if="${posts == null or posts.isEmpty()}" class="text-center py-24">
+        <p class="text-2xl font-semibold text-[#5A4D41]" style="font-family: 'Playfair Display', serif;">
+            아직 작성된 게시글이 없어요
+        </p>
+        <p class="mt-3 text-[#8B7355]" style="font-family: 'Noto Sans KR', sans-serif;">
+            오른쪽 아래 <b>+</b> 버튼을 눌러 첫 기록을 남겨보세요!
+        </p>
 
-            <img
-                    th:src="@{${post.imageUrl}}"
-                    th:alt="${post.title}"
-                    class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-                    style="display: block;"
-                    onerror="this.src='https://picsum.photos/400/600'"
-            />
-
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 class="text-white" style="font-family: 'Noto Sans KR', sans-serif; font-weight: 600;"
-                        th:text="${post.title}"></h3>
-                </div>
-            </div>
-        </a>
-
-        <!-- ✅ posts가 비었을 때 (샘플 카드) -->
-        <div th:if="${posts == null or posts.isEmpty()}">
-            <a href="/posts/1" class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl" style="background-color: #F9F6F1; display:block;">
-                <img src="https://picsum.photos/seed/vintage/400/600" alt="빈티지 감성" class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" style="display: block;" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div class="absolute bottom-0 left-0 right-0 p-4"><h3 class="text-white" style="font-family: 'Noto Sans KR', sans-serif; font-weight: 600;">빈티지 감성</h3></div>
-                </div>
-            </a>
-
-            <a href="/posts/2" class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl" style="background-color: #F9F6F1; display:block;">
-                <img src="https://picsum.photos/seed/minimal/400/500" alt="미니멀 인테리어" class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" style="display: block;" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div class="absolute bottom-0 left-0 right-0 p-4"><h3 class="text-white" style="font-family: 'Noto Sans KR', sans-serif; font-weight: 600;">미니멀 인테리어</h3></div>
-                </div>
-            </a>
-
-            <a href="/posts/3" class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl" style="background-color: #F9F6F1; display:block;">
-                <img src="https://picsum.photos/seed/nature/400/400" alt="자연의 평화" class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" style="display: block;" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div class="absolute bottom-0 left-0 right-0 p-4"><h3 class="text-white" style="font-family: 'Noto Sans KR', sans-serif; font-weight: 600;">자연의 평화</h3></div>
-                </div>
+        <div class="mt-8">
+            <a href="/posts/create"
+               class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#D4C4B0] text-white hover:bg-[#C9B5A0] transition"
+               style="font-family: 'Noto Sans KR', sans-serif;">
+                <span class="text-xl">＋</span>
+                <span class="font-medium">게시글 작성</span>
             </a>
         </div>
     </div>
 
-    <div id="loadingIndicator" class="hidden flex justify-center items-center py-12">
-        <div class="w-8 h-8 border-4 border-[#E8D5C4] border-t-[#D4C4B0] rounded-full animate-spin"></div>
+    <!-- ✅ 게시글 있을 때만 실제 게시글 렌더 -->
+    <div th:if="${posts != null and !posts.isEmpty()}">
+        <div id="masonryGrid" class="masonry-grid">
+
+            <a th:each="post : ${posts}"
+               th:if="${post != null and post.id != null}"
+               th:href="@{/posts/{id}(id=${post.id})}"
+               class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl"
+               style="background-color: #F9F6F1; display:block;">
+
+                <!-- 대표 이미지 (HomePostDto.imageUrl) -->
+                <img
+                        th:src="${post.imageUrl != null and !#strings.isEmpty(post.imageUrl)} ? @{${post.imageUrl}} : 'https://picsum.photos/400/600'"
+                        th:alt="${post.title}"
+                        class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                        style="display: block;"
+                        onerror="this.src='https://picsum.photos/400/600'"
+                />
+
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 class="text-white" style="font-family: 'Noto Sans KR', sans-serif; font-weight: 600;"
+                            th:text="${post.title}"></h3>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <div id="loadingIndicator" class="hidden flex justify-center items-center py-12">
+            <div class="w-8 h-8 border-4 border-[#E8D5C4] border-t-[#D4C4B0] rounded-full animate-spin"></div>
+        </div>
     </div>
 </main>
 
@@ -109,6 +109,7 @@
 <div th:replace="~{layout/header :: searchModal}"></div>
 <script th:replace="~{layout/header :: commonScript}"></script>
 
+<!-- ✅ 기존 JS 유지 (카테고리/무한스크롤 API 쓰는 팀원 기능을 최대한 안 깨려고 남겨둠) -->
 <script th:inline="none">
     let currentPage = 1;
     let isLoading = false;
@@ -139,30 +140,32 @@
         axios.get('/api/posts', {
             params: { category: category !== '전체' ? category : null }
         })
-        .then(response => renderPosts(response.data))
-        .catch(error => console.error('게시물 로드 오류:', error))
-        .finally(() => {
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
-        });
+            .then(response => renderPosts(response.data))
+            .catch(error => console.error('게시물 로드 오류:', error))
+            .finally(() => {
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            });
     }
 
-    // ✅ 여기서도 div onclick 대신 a href로 뿌리기 (JS 의존 제거)
     function renderPosts(posts) {
         const masonryGrid = document.getElementById('masonryGrid');
         if (!masonryGrid) return;
 
         if (!posts || posts.length === 0) {
-            masonryGrid.innerHTML = '<p class="text-center text-[#A89080] py-12" style="font-family: \'Noto Sans KR\', sans-serif;">게시물이 없습니다.</p>';
+            masonryGrid.innerHTML =
+                '<p class="text-center text-[#A89080] py-12" style="font-family: \\'Noto Sans KR\\', sans-serif;">게시물이 없습니다.</p>';
             return;
         }
 
-        masonryGrid.innerHTML = posts.map(post => `
+        masonryGrid.innerHTML = posts
+            .filter(p => p && p.id != null)
+            .map(post => `
             <a href="/posts/${post.id}"
                class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl"
                style="background-color:#F9F6F1; display:block;">
                 <img
-                    src="${post.imageUrl}"
-                    alt="${post.title}"
+                    src="${post.imageUrl && post.imageUrl.trim() ? post.imageUrl : 'https://picsum.photos/400/600'}"
+                    alt="${post.title || ''}"
                     class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                     style="display:block;"
                     onerror="this.src='https://picsum.photos/400/600'"
@@ -170,7 +173,7 @@
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div class="absolute bottom-0 left-0 right-0 p-4">
                         <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
-                            ${post.title}
+                            ${post.title || ''}
                         </h3>
                     </div>
                 </div>
@@ -191,33 +194,35 @@
                 category: activeCategory !== '전체' ? activeCategory : null
             }
         })
-        .then(response => {
-            const posts = response.data.content || response.data;
-            if (!posts || posts.length === 0) {
-                hasMore = false;
-            } else {
-                currentPage++;
-                appendPosts(posts);
-            }
-        })
-        .catch(error => console.error('추가 게시물 로드 오류:', error))
-        .finally(() => {
-            isLoading = false;
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
-        });
+            .then(response => {
+                const posts = response.data.content || response.data;
+                if (!posts || posts.length === 0) {
+                    hasMore = false;
+                } else {
+                    currentPage++;
+                    appendPosts(posts);
+                }
+            })
+            .catch(error => console.error('추가 게시물 로드 오류:', error))
+            .finally(() => {
+                isLoading = false;
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            });
     }
 
     function appendPosts(posts) {
         const masonryGrid = document.getElementById('masonryGrid');
         if (!masonryGrid) return;
 
-        const postsHTML = posts.map(post => `
+        const postsHTML = posts
+            .filter(p => p && p.id != null)
+            .map(post => `
             <a href="/posts/${post.id}"
                class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl"
                style="background-color:#F9F6F1; display:block;">
                 <img
-                    src="${post.imageUrl}"
-                    alt="${post.title}"
+                    src="${post.imageUrl && post.imageUrl.trim() ? post.imageUrl : 'https://picsum.photos/400/600'}"
+                    alt="${post.title || ''}"
                     class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                     style="display:block;"
                     onerror="this.src='https://picsum.photos/400/600'"
@@ -225,7 +230,7 @@
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div class="absolute bottom-0 left-0 right-0 p-4">
                         <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
-                            ${post.title}
+                            ${post.title || ''}
                         </h3>
                     </div>
                 </div>

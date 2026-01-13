@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class CommentController {
 
     private final CommentService commentService;
-
-    // ✅ loginId -> userId 조회용
     private final UserRepository userRepository;
 
     // =========================
@@ -49,6 +47,11 @@ public class CommentController {
     // =========================
     // 댓글 작성/삭제/수정
     // =========================
+
+    /**
+     * 댓글 작성
+     * - 작성 후: 0페이지로 이동(최신 댓글 보이게)
+     */
     @PostMapping("/comments")
     public String create(
             @Valid @ModelAttribute CommentCreateRequestDto req,
@@ -59,12 +62,16 @@ public class CommentController {
 
         commentService.createComment(req.postId(), currentUserId, req.content());
 
-        return "redirect:/post/view.html?id=" + req.postId()
-                + "&page=0"
+        return "redirect:/posts/" + req.postId()
+                + "?page=0"
                 + "&size=" + size
                 + "#comments";
     }
 
+    /**
+     * 댓글 삭제
+     * - 삭제 후: 현재 보고 있던 page 유지
+     */
     @PostMapping("/comments/{id}/delete")
     public String delete(
             @PathVariable("id") Integer commentId,
@@ -76,12 +83,16 @@ public class CommentController {
 
         Integer postId = commentService.deleteComment(commentId, currentUserId);
 
-        return "redirect:/post/view.html?id=" + postId
-                + "&page=" + page
+        return "redirect:/posts/" + postId
+                + "?page=" + page
                 + "&size=" + size
                 + "#comments";
     }
 
+    /**
+     * 댓글 수정
+     * - 수정 후: 현재 보고 있던 page 유지
+     */
     @PostMapping("/comments/{id}/edit")
     public String edit(
             @PathVariable("id") Integer commentId,
@@ -94,8 +105,8 @@ public class CommentController {
 
         Integer postId = commentService.editComment(commentId, currentUserId, content);
 
-        return "redirect:/post/view.html?id=" + postId
-                + "&page=" + page
+        return "redirect:/posts/" + postId
+                + "?page=" + page
                 + "&size=" + size
                 + "#comments";
     }

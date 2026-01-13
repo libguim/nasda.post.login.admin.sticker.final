@@ -30,7 +30,30 @@ public class PostController {
     private final PostImageService postImageService;
     private final UserRepository userRepository;
 
-    // 1. 글 작성 페이지 (GET)
+    // =========================
+    // 0) 홈 "/" = 게시글 목록
+    // =========================
+    @GetMapping("/")
+    public String home(Model model) {
+        model.addAttribute("posts", postService.getHomePosts());
+
+        String nickname = getCurrentNicknameOrNull();
+        model.addAttribute("username", nickname == null ? "게스트" : nickname);
+
+        return "index";
+    }
+
+    // =========================
+    // 0-1) /posts 접속은 홈으로 보내서 사실상 /posts 라우트 없애기
+    // =========================
+    @GetMapping("/posts")
+    public String postsRedirect() {
+        return "redirect:/";
+    }
+
+    // =========================
+    // 1) 글 작성 페이지 (GET)
+    // =========================
     @GetMapping("/posts/create")
     public String createForm(Model model) {
         model.addAttribute("postCreateRequestDto", new PostCreateRequestDto("", "", ""));
@@ -39,11 +62,12 @@ public class PostController {
         String nickname = getCurrentNicknameOrNull();
         model.addAttribute("username", nickname == null ? "게스트" : nickname);
 
-        return "post/create"; // templates/post/create.html
+        return "post/create";
     }
 
-    // 2. 게시글 상세 보기 (ID 변수 처리)
-    // 기존의 viewCompat과 viewPost를 하나로 합쳐서 깔끔하게 정리했습니다.
+    // =========================
+    // 2) 게시글 상세 보기
+    // =========================
     @GetMapping("/posts/{postId}")
     public String viewPost(
             @PathVariable("postId") String postIdStr,
@@ -52,14 +76,11 @@ public class PostController {
             Model model
     ) {
         try {
-            // "create" 문자가 들어오면 상세보기가 아닌 글쓰기 폼으로 토스
-            if ("create".equals(postIdStr)) {
-                return "forward:/posts/create";
-            }
+            // 혹시 /posts/create 같은 것이 여기로 들어오면 create로 보냄
+            if ("create".equals(postIdStr)) return "redirect:/posts/create";
 
             Integer postId = Integer.parseInt(postIdStr);
 
-            // 데이터 조회 로직
             PostEntity entity = postService.get(postId);
             List<String> imageUrls = postImageService.getImageUrls(postId);
             Integer currentUserId = getCurrentUserIdOrNull();
@@ -80,6 +101,7 @@ public class PostController {
             );
 
             var commentsPage = commentService.getCommentsPage(postId, page, size, currentUserId);
+
             model.addAttribute("post", post);
             model.addAttribute("comments", commentsPage.getContent());
             model.addAttribute("commentsPage", commentsPage);
@@ -87,21 +109,15 @@ public class PostController {
             String nickname = getCurrentNicknameOrNull();
             model.addAttribute("username", nickname == null ? "게스트" : nickname);
 
-            return "post/view"; // templates/post/view.html
-
+            return "post/view";
         } catch (NumberFormatException e) {
-            return "redirect:/posts"; // 숫자가 아니면 리스트로
+            return "redirect:/";
         }
     }
 
-    // 3. 홈 리스트
-    @GetMapping("/posts")
-    public String list(Model model) {
-        model.addAttribute("posts", postService.getHomePosts());
-        return "index";
-    }
-
-    // 4. 글 등록(POST)
+    // =========================
+    // 3) 글 등록(POST)
+    // =========================
     @PostMapping("/posts")
     public String createPost(
             @RequestParam String title,
@@ -115,32 +131,97 @@ public class PostController {
         CategoryEntity categoryEntity = categoryRepository.findByCategoryName(category)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리: " + category));
 
-        // DB 저장
         PostEntity post = postService.create(userId, categoryEntity.getCategoryId(), title, description);
+
         if (images != null && !images.isEmpty()) {
             postImageService.addImages(post, images);
         }
 
-        // ⭐ 수정 포인트: .html을 붙이지 않고 설정한 @GetMapping 주소로 리다이렉트
         return "redirect:/posts/" + post.getPostId();
     }
 
-    // 유저 정보 헬퍼 메서드 (기존과 동일)
+    // =========================
+    // 4) 수정 페이지 (GET)
+    // =========================
+    @GetMapping("/posts/edit/{id}")
+    public String editForm(@PathVariable Integer id, Model model) {
+        PostEntity entity = postService.get(id);
+
+        model.addAttribute("postId", entity.getPostId());
+        model.addAttribute("title", entity.getTitle());
+        model.addAttribute("description", entity.getDescription());
+        model.addAttribute("category", entity.getCategory().getCategoryName());
+        model.addAttribute("images", List.of()); // 기존 로직 유지
+        model.addAttribute("categories", categoryRepository.findAll());
+
+        String nickname = getCurrentNicknameOrNull();
+        model.addAttribute("username", nickname == null ? "게스트" : nickname);
+
+        return "post/edit";
+    }
+
+    // =========================
+    // 5) 수정 처리 (POST)
+    // =========================
+    @PostMapping("/posts/{id}/edit")
+    public String editPost(
+            @PathVariable Integer id,
+            @RequestParam String title,
+            @RequestParam String category,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) List<MultipartFile> newImages
+    ) {
+        Integer userId = getCurrentUserIdOrNull();
+        if (userId == null) return "redirect:/user/login";
+
+        CategoryEntity categoryEntity = categoryRepository.findByCategoryName(category)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리: " + category));
+
+        postService.update(id, userId, categoryEntity.getCategoryId(), title, description);
+
+        PostEntity post = postService.get(id);
+        postImageService.replaceImages(id, post, newImages);
+
+        return "redirect:/posts/" + id;
+    }
+
+    // =========================
+    // 6) 삭제 처리 (POST) - 삭제 후 "/" 로 이동
+    // =========================
+    @PostMapping("/posts/{id}/delete")
+    public String deletePost(@PathVariable Integer id) {
+        Integer userId = getCurrentUserIdOrNull();
+        if (userId == null) return "redirect:/user/login";
+
+        postService.delete(id, userId);
+        return "redirect:/";
+    }
+
+    // =========================
+    // 로그인 사용자 정보 헬퍼 (SecurityUtil 대체)
+    // =========================
     private String getLoginIdOrNull() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return null;
+
         Object principal = auth.getPrincipal();
         if (principal == null || "anonymousUser".equals(principal)) return null;
-        return auth.getName();
+
+        String loginId = auth.getName();
+        if (loginId == null || loginId.isBlank()) return null;
+
+        return loginId;
     }
 
     private Integer getCurrentUserIdOrNull() {
         String loginId = getLoginIdOrNull();
-        return (loginId == null) ? null : userRepository.findByLoginId(loginId).map(UserEntity::getUserId).orElse(null);
+        return (loginId == null) ? null
+                : userRepository.findByLoginId(loginId).map(UserEntity::getUserId).orElse(null);
     }
 
     private String getCurrentNicknameOrNull() {
         String loginId = getLoginIdOrNull();
-        return (loginId == null) ? null : userRepository.findByLoginId(loginId).map(UserEntity::getNickname).orElse(null);
+        return (loginId == null) ? null
+                : userRepository.findByLoginId(loginId).map(UserEntity::getNickname).orElse(null);
     }
 }
