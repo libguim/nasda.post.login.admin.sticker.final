@@ -84,8 +84,8 @@ public class CommentController {
         Integer postId = commentService.deleteComment(commentId, currentUserId);
 
         return "redirect:/posts/" + postId
-                + "?page=" + page
-                + "&size=" + size
+                + "?page=0"
+                + "&size=5"
                 + "#comments";
     }
 
