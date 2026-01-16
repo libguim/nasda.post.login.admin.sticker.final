@@ -1,124 +1,226 @@
-//package com.example.nasda.repository;
-//
-//import com.example.nasda.domain.*;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-//
-//import java.util.List;
-//
-//import static org.assertj.core.api.Assertions.assertThat;
-//
-//@DataJpaTest
-//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-//class PostDecorationRepositoryTest {
-//
-//    @Autowired
-//    private PostDecorationRepository postDecorationRepository;
-//
-//    @Autowired
-//    private TestEntityManager entityManager;
-//
+package com.example.nasda.repository;
+
+import com.example.nasda.domain.*;
+import com.example.nasda.repository.sticker.PostDecorationRepository;
+import com.example.nasda.repository.sticker.StickerCategoryRepository;
+import com.example.nasda.repository.sticker.StickerRepository;
+import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@Log4j2
+public class PostDecorationRepositoryTest {
+
+    @Autowired private UserRepository userRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private PostRepository postRepository;
+    @Autowired private PostImageRepository postImageRepository;
+    @Autowired private StickerCategoryRepository stickerCategoryRepository;
+    @Autowired private StickerRepository stickerRepository;
+    @Autowired private PostDecorationRepository postDecorationRepository;
+
+    @Test
+    @DisplayName("유저 리포지토리 단독 테스트")
+    public void testUserInsert() {
+        String uniqueId = String.valueOf(System.currentTimeMillis()).substring(8);
+        UserEntity user = UserEntity.builder()
+                .loginId("user_" + uniqueId)
+                .password("1111")
+                .email("moana_" + uniqueId + "@test.com")
+                .nickname("모아나_" + uniqueId)
+                .role(UserRole.USER)
+                .status(UserStatus.ACTIVE)
+                .build();
+
+        UserEntity result = userRepository.save(user);
+        log.info("--- User Saved ID: " + result.getUserId());
+    }
+
 //    @Test
-//    @DisplayName("이미지 ID로 장식 목록 조회 시, 연관된 스티커와 카테고리 정보까지 무결하게 가져와야 한다")
-//    void findByPostImage_ImageId_Test() {
-//        // [1. 게시물 관련 기초 공사 (Given)]
-//
-//        // 1-1. 사용자(User) 생성
-//        UserEntity user = UserEntity.builder()
-//                .loginId("moana_dev")
-//                .password("securePass123!")
-//                .email("moana@ocean.com")
-//                .nickname("Moana")
-//                .role(UserRole.USER)
-//                .status(UserStatus.ACTIVE)
-//                .build();
-//        entityManager.persist(user);
-//
-//        // 1-2. 게시물 카테고리(Category) 생성
-//        CategoryEntity postCategory = CategoryEntity.builder()
-//                .categoryName("Inspiration")
+//    @DisplayName("카테고리 리포지토리 단독 테스트")
+//    public void testCategoryInsert() {
+//        CategoryEntity category = CategoryEntity.builder()
+//                .categoryName("자유게시판")
 //                .isActive(true)
 //                .build();
-//        entityManager.persist(postCategory);
 //
-//        // 1-3. 게시물(Post) 생성
-//        PostEntity post = PostEntity.builder()
-//                .user(user)
-//                .category(postCategory)
-//                .title("나의 스티커 다이어리")
-//                .isDecotable(true)
-//                .build();
-//        entityManager.persist(post);
-//
-//        // 1-4. 게시물 이미지(PostImage) 생성
-//        PostImageEntity postImage = PostImageEntity.builder()
-//                .post(post)
-//                .imageUrl("/uploads/sample_image.jpg")
-//                .sortOrder(1)
-//                .isRepresentative(true)
-//                .build();
-//        entityManager.persist(postImage);
-//
-//
-//        // [2. 스티커 관련 기초 공사 (New!)]
-//
-//        // 2-1. 스티커 카테고리(StickerCategory) 생성 (★중요: 이게 없으면 스티커 생성 불가)
-//        StickerCategoryEntity stickerCategory = StickerCategoryEntity.builder()
-//                .name("Emotions") // 감정 표현 스티커
-//                .isActive(true)
-//                .build();
-//        entityManager.persist(stickerCategory);
-//
-//        // 2-2. 스티커(Sticker) 생성
-//        // (보내주신 필드명 stickerImageUrl 반영 완료)
-//        StickerEntity sticker = StickerEntity.builder()
-//                .stickerCategory(stickerCategory) // 카테고리 연결 필수!
-//                .stickerName("Heart Sticker")
-//                .stickerImageUrl("/stickers/heart.png")
-//                .build();
-//        entityManager.persist(sticker);
-//
-//
-//        // [3. 테스트 대상: 장식(Decoration) 데이터 저장]
-//        PostDecorationEntity decoration = PostDecorationEntity.builder()
-//                .post(post)
-//                .postImage(postImage)
-//                .user(user)
-//                .sticker(sticker)
-//                .posX(50.5f)
-//                .posY(30.0f)
-//                .scale(1.5f)
-//                .rotation(90.0f)
-//                .zIndex(2)
-//                .build();
-//
-//        postDecorationRepository.save(decoration);
-//
-//        // 영속성 컨텍스트 초기화 (DB 조회 쿼리 발생 확인용)
-//        entityManager.flush();
-//        entityManager.clear();
-//
-//
-//        // [4. 실행 (When)]
-//        List<PostDecorationEntity> result = postDecorationRepository.findByPostImage_ImageId(postImage.getImageId());
-//
-//
-//        // [5. 검증 (Then)]
-//        assertThat(result).hasSize(1);
-//
-//        PostDecorationEntity foundDecoration = result.get(0);
-//
-//        // 좌표 검증
-//        assertThat(foundDecoration.getPosX()).isEqualTo(50.5f);
-//
-//        // 스티커 정보 검증 (필드명 수정 반영: getStickerImageUrl)
-//        assertThat(foundDecoration.getSticker().getStickerImageUrl()).isEqualTo("/stickers/heart.png");
-//
-//        // 스티커의 카테고리까지 잘 따라가는지 확인 (Entity Graph 테스트)
-//        assertThat(foundDecoration.getSticker().getStickerCategory().getName()).isEqualTo("Emotions");
+//        CategoryEntity result = categoryRepository.save(category);
+//        log.info("--- Category Saved ID: " + result.getCategoryId());
 //    }
-//}
+    @Test
+    @DisplayName("카테고리 랜덤 이름 테스트")
+    public void testCategoryInsertRandom() {
+        String[] names = {"자유게시판", "공지사항", "Q&A", "정보공유", "이벤트"};
+
+        // 배열 중 하나를 랜덤하게 선택
+        int randomIndex = (int) (Math.random() * names.length);
+        String randomName = names[randomIndex] + "_" + (int)(Math.random() * 1000);
+
+        CategoryEntity category = CategoryEntity.builder()
+                .categoryName(randomName)
+                .isActive(true)
+                .build();
+
+        CategoryEntity result = categoryRepository.save(category);
+        log.info("--- 랜덤 생성 카테고리: " + result.getCategoryName());
+    }
+
+    @Test
+    @DisplayName("스티커 및 스티커 카테고리 연동 테스트")
+    public void testStickerInsert() {
+        StickerCategoryEntity sCat = stickerCategoryRepository.save(
+                StickerCategoryEntity.builder().name("감정표현").isActive(true).build());
+
+        StickerEntity sticker = StickerEntity.builder()
+                .stickerCategory(sCat)
+                .stickerName("웃는 얼굴")
+                .stickerImageUrl("smile.png")
+                .build();
+
+        StickerEntity result = stickerRepository.save(sticker);
+        log.info("--- Sticker Saved ID: " + result.getStickerId());
+    }
+
+// --- [CREATE] 생성 테스트 ---
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    @DisplayName("1. 복합 관계를 가진 장식 저장 (Create)")
+    public void testDecorationInsert() {
+        // [Given] 기초 데이터 준비
+        UserEntity user = createQuickUser();
+        CategoryEntity cat = categoryRepository.save(CategoryEntity.builder().categoryName("테스트카테고리").isActive(true).build());
+        PostEntity post = postRepository.save(PostEntity.builder().title("테스트 포스트").user(user).category(cat).build());
+        PostImageEntity img = postImageRepository.save(PostImageEntity.builder()
+                .post(post)
+                .imageUrl("background.jpg")
+                .sortOrder(1)
+                .isRepresentative(true)
+                .build());
+        StickerEntity sticker = createQuickSticker();
+
+        // [When] 장식 저장
+        PostDecorationEntity deco = PostDecorationEntity.builder()
+                .post(post).postImage(img).user(user).sticker(sticker)
+                .posX(150.5f).posY(200.0f).scale(1.2f).zIndex(10)
+                .build();
+
+        PostDecorationEntity result = postDecorationRepository.save(deco);
+
+        // [Then]
+        assertNotNull(result.getDecorationId());
+        log.info("--- 장식 저장 완료 ID: " + result.getDecorationId());
+    }
+
+    // --- [READ] 조회 테스트 ---
+
+    @Test
+    @Transactional
+    @DisplayName("2. 이미지별 장식 목록 조회 (Read - EntityGraph)")
+    public void testSelectByImage() {
+        // [Given] 특정 이미지 ID 지정 (HeidiSQL 등에서 확인된 ID)
+        Integer targetImageId = 12;
+
+        // [When] Sticker 정보까지 한 번에 가져오는지 확인
+        List<PostDecorationEntity> list = postDecorationRepository.findByPostImage_ImageId(targetImageId);
+
+        // [Then]
+        log.info("--- 조회된 장식 개수: " + list.size());
+        list.forEach(deco -> {
+            log.info(deco);
+            log.info("장식 ID: " + deco.getDecorationId() + " | 사용된 스티커: " + deco.getSticker().getStickerName());
+        });
+    }
+
+    // --- [UPDATE] 수정 테스트 ---
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    @DisplayName("3. 장식 위치 및 속성 수정 (Update)")
+    public void testUpdateDecoration() {
+        // [Given] 수정할 대상 ID
+        Integer targetId = 1;
+        float newX = 500.0f;
+        float newY = 300.0f;
+
+        // [When] 엔티티 객체를 수정하는 대신, Repository를 통해 DB 직접 업데이트
+        postDecorationRepository.updatePosition(targetId, newX, newY);
+
+        // [Then] 영속성 컨텍스트를 새로고침하거나 다시 조회하여 확인
+        // findById는 영속성 컨텍스트를 거치므로 DB 값을 정확히 보기 위해 다시 조회합니다.
+        PostDecorationEntity updated = postDecorationRepository.findById(targetId).get();
+        log.info("--- 수정 후 위치: X=" + updated.getPosX());
+
+        assertEquals(newX, updated.getPosX());
+    }
+
+    // --- [DELETE] 삭제 테스트 ---
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    @DisplayName("4. 특정 장식 단건 삭제 (Delete)")
+    public void testDeleteOne() {
+        Integer targetId = 1;
+        postDecorationRepository.deleteById(targetId);
+
+        boolean exists = postDecorationRepository.existsById(targetId);
+        assertFalse(exists);
+        log.info("--- 삭제 완료 여부: " + !exists);
+    }
+
+    @Test
+    @Transactional
+    @Rollback(false)
+    @DisplayName("5. 게시글 삭제 시 관련 모든 장식 일괄 삭제 (Bulk Delete)")
+    public void testDeleteByPost() {
+        Integer targetPostId = 1;
+
+        // 수정된 메서드명 호출 (언더바 제거)
+        postDecorationRepository.deleteByPostPostId(targetPostId);
+
+        // 검증 조회 메서드도 수정된 이름으로 호출
+        List<PostDecorationEntity> remaining = postDecorationRepository.findByPostPostId(targetPostId);
+
+        assertTrue(remaining.isEmpty());
+        log.info("--- 일괄 삭제 완료 ---");
+    }
+
+    // --- [BUSINESS LOGIC] 비즈니스 로직 검증 ---
+
+    @Test
+    @DisplayName("6. 도배 방지를 위한 특정 유저의 이미지별 장식 카운트")
+    public void testCountThrottle() {
+        Integer userId = 1;
+        Integer imageId = 12;
+
+        long count = postDecorationRepository.countByUser_UserIdAndPostImage_ImageId(userId, imageId);
+        log.info("--- 유저(" + userId + ")가 이미지(" + imageId + ")에 붙인 스티커 총합: " + count);
+    }
+
+    // --- 퀵 헬퍼 메서드 ---
+    private UserEntity createQuickUser() {
+        String ts = String.valueOf(System.nanoTime()).substring(10);
+        return userRepository.save(UserEntity.builder()
+                .loginId("user_" + ts).password("1111").email("u_" + ts + "@test.com").nickname("모아나_" + ts)
+                .role(UserRole.USER).status(UserStatus.ACTIVE).build());
+    }
+
+    private StickerEntity createQuickSticker() {
+        StickerCategoryEntity c = stickerCategoryRepository.save(StickerCategoryEntity.builder().name("테스트카테").build());
+        return stickerRepository.save(StickerEntity.builder().stickerCategory(c).stickerName("기본스티커").stickerImageUrl("test.png").build());
+    }
+
+
+}

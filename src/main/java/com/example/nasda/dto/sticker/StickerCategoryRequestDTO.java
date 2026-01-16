@@ -1,4 +1,4 @@
-package com.example.nasda.dto;
+package com.example.nasda.dto.sticker;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;

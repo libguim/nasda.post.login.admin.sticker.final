@@ -1,4 +1,4 @@
-package com.example.nasda.repository;
+package com.example.nasda.repository.sticker;
 
 import com.example.nasda.domain.StickerCategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

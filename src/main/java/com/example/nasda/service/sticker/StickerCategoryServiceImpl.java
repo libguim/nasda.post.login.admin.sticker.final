@@ -1,9 +1,9 @@
-package com.example.nasda.service;
+package com.example.nasda.service.sticker;
 
 import com.example.nasda.domain.StickerCategoryEntity;
-import com.example.nasda.dto.StickerCategoryRequestDTO;
-import com.example.nasda.dto.StickerCategoryResponseDTO;
-import com.example.nasda.repository.StickerCategoryRepository;
+import com.example.nasda.dto.sticker.StickerCategoryRequestDTO;
+import com.example.nasda.dto.sticker.StickerCategoryResponseDTO;
+import com.example.nasda.repository.sticker.StickerCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;

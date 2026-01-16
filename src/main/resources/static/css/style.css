@@ -1016,3 +1016,92 @@ html {
     object-fit: cover;
     display: block;
 }
+
+
+
+
+/* ========================================
+   스티커 기능 관련 스타일
+======================================== */
+
+/* ✅ 1. 카테고리 탭 슬라이드 스타일 */
+#sticker-category-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto; /* 가로 스크롤 활성화 */
+    white-space: nowrap; /* 버튼들이 한 줄로 나열되도록 고정 */
+    padding: 4px 0 10px 0; /* 아래쪽 여백을 주어 탭이 답답해 보이지 않게 함 */
+    -ms-overflow-style: none; /* IE, Edge 스크롤바 숨기기 */
+    scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
+    scroll-behavior: smooth; /* 탭 클릭 시 부드러운 이동 */
+}
+
+/* 크롬, 사파리 스크롤바 숨기기 */
+#sticker-category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* ✅ 2. 카테고리 버튼 (반응형 대응) */
+.category-btn {
+    flex: 0 0 auto; /* 슬라이드 유지를 위해 크기 고정 */
+    padding: 7px 15px; /* 조금 더 여유 있는 패딩 */
+    font-size: 13px; /* 가독성을 위해 살짝 키움 */
+    font-weight: 600;
+    border-radius: 999px; /* 완전한 라운드 형태 */
+    background: #ffffff;
+    color: #8B7355;
+    border: 1px solid #E8D5C4;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* 미세한 그림자로 입체감 부여 */
+}
+
+/* 활성화된 탭 스타일 */
+.category-btn.active {
+    background: #8B7355;
+    color: #ffffff;
+    border-color: #8B7355;
+    transform: translateY(-1px); /* 활성화 시 살짝 올라오는 효과 */
+}
+
+/* ✅ 3. 반응형 스티커 팔레트 (그리드 최적화) */
+/* ✅ 브라우저 너비에 따라 그리드 컬럼을 직접 제어하는 가장 확실한 방법 */
+#sticker-palette {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* 모바일 기본 3열 */
+}
+
+@media (min-width: 640px) {  #sticker-palette { grid-template-columns: repeat(4, 1fr) !important; } }
+@media (min-width: 768px) { #sticker-palette { grid-template-columns: repeat(6, 1fr) !important; } }
+@media (min-width: 1024px) { #sticker-palette { grid-template-columns: repeat(8, 1fr) !important; } }
+@media (min-width: 1280px) { #sticker-palette { grid-template-columns: repeat(10, 1fr) !important; } }
+@media (min-width: 1536px) { #sticker-palette { grid-template-columns: repeat(12, 1fr) !important; } }
+
+/* 개별 스티커 아이템 */
+.palette-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1; /* ✅ 가로세로 1:1 비율 고정 */
+    padding: 10px;
+    background: #FDFBFA;
+    border: 1px solid #F5EDE5;
+    border-radius: 14px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.palette-item:hover {
+    background: #F9F6F1;
+    transform: scale(1.1); /* 마우스 올렸을 때 살짝 강조 */
+    box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
+}
+
+/* 스크롤바 숨기기 유틸리티 */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

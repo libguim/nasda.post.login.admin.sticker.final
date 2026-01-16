@@ -1,4 +1,4 @@
-package com.example.nasda.dto;
+package com.example.nasda.dto.sticker;
 
 import com.example.nasda.domain.PostDecorationEntity;
 import lombok.AllArgsConstructor;
@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class PostDecorationResponseDTO {
 
     private Integer decorationId;
+    private Integer postImageId;
 
     // 스티커 정보
     private Integer stickerId;
@@ -29,6 +30,7 @@ public class PostDecorationResponseDTO {
     public static PostDecorationResponseDTO from(PostDecorationEntity entity) {
         return PostDecorationResponseDTO.builder()
                 .decorationId(entity.getDecorationId())
+                .postImageId(entity.getPostImage().getImageId())
                 .stickerId(entity.getSticker().getStickerId())
                 .stickerImageUrl(entity.getSticker().getStickerImageUrl())
                 .posX(entity.getPosX())

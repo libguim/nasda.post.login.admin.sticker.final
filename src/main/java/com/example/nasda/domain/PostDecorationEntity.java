@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class PostDecorationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,4 +52,13 @@ public class PostDecorationEntity {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // PostDecorationEntity 내부에 추가
+    public void changePosition(Float posX, Float posY, Float scale, Float rotation) {
+        this.posX = posX;
+        this.posY = posY;
+        this.scale = scale;
+        this.rotation = rotation;
+    }
+
 }

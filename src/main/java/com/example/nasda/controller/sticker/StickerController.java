@@ -1,8 +1,8 @@
-package com.example.nasda.controller;
+package com.example.nasda.controller.sticker;
 
-import com.example.nasda.dto.StickerRequestDTO;
-import com.example.nasda.dto.StickerResponseDTO;
-import com.example.nasda.service.StickerService;
+import com.example.nasda.dto.sticker.StickerRequestDTO;
+import com.example.nasda.dto.sticker.StickerResponseDTO;
+import com.example.nasda.service.sticker.StickerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;

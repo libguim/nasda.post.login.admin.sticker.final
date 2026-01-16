@@ -1,164 +1,132 @@
 package com.example.nasda.service;
 
-import com.example.nasda.domain.StickerCategoryEntity;
-import com.example.nasda.domain.StickerEntity;
-import com.example.nasda.dto.StickerRequestDTO;
-import com.example.nasda.dto.StickerResponseDTO;
-import com.example.nasda.repository.StickerCategoryRepository;
-import com.example.nasda.repository.StickerRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import com.example.nasda.dto.sticker.StickerCategoryRequestDTO;
+import com.example.nasda.dto.sticker.StickerRequestDTO;
+import com.example.nasda.dto.sticker.StickerResponseDTO;
+import com.example.nasda.service.sticker.StickerCategoryService;
+import com.example.nasda.service.sticker.StickerService;
+import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.config.Configuration;
-import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
+@SpringBootTest
+@Log4j2
+public class StickerServiceTest {
 
-@ExtendWith(MockitoExtension.class) // 1. Mockito 환경에서 테스트 실행
-class StickerServiceTest {
+    @Autowired
+    private StickerService stickerService;
 
-    @InjectMocks // 2. 가짜(Mock) 부품들을 이 서비스(본체)에 주입합니다.
-    private StickerServiceImpl stickerService;
+    @Autowired
+    private StickerCategoryService stickerCategoryService; // ★ 기초 데이터(카테고리) 생성을 위해 필요
 
-    @Mock // 3. 가짜 저장소 (실제 DB에 안 감)
-    private StickerRepository stickerRepository;
+    // 1. 스티커 등록 테스트
+    @Test
+    public void testRegister() {
+        // [Step 1] 스티커를 붙일 '카테고리'를 먼저 하나 만듭니다. (FK 제약조건 해결)
+        StickerCategoryRequestDTO categoryReq = StickerCategoryRequestDTO.builder()
+                .name("Test Category for Sticker")
+                .isActive(true)
+                .build();
 
-    @Mock // 3. 가짜 카테고리 저장소
-    private StickerCategoryRepository stickerCategoryRepository;
+        Integer categoryId = stickerCategoryService.createCategory(categoryReq);
+        log.info("준비된 카테고리 ID: " + categoryId);
 
-    @Spy // 4. 진짜 같은 가짜 (실제 객체를 쓰되, 필요하면 조작 가능)
-    private ModelMapper modelMapper;
+        // [Step 2] 위에서 만든 카테고리 ID를 이용해 스티커 등록 요청 객체 생성
+        StickerRequestDTO stickerReq = StickerRequestDTO.builder()
+                .stickerCategoryId(categoryId) // ★ 생성한 카테고리 ID 연결
+                .stickerName("Super Happy Dog")
+                .stickerImageUrl("/test/dog.png")
+                .build();
 
-    @BeforeEach
-    void setup() {
-        // RootConfig와 동일한 ModelMapper 설정을 테스트에도 적용
-        modelMapper.getConfiguration()
-                .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE)
-                .setFieldMatchingEnabled(true)
-                .setMatchingStrategy(MatchingStrategies.LOOSE);
+        // [Step 3] 스티커 서비스 호출
+        Integer stickerId = stickerService.createSticker(stickerReq);
+
+        // [Step 4] 검증
+        log.info("생성된 스티커 ID: " + stickerId);
+        Assertions.assertNotNull(stickerId);
     }
 
+    // 2. 존재하지 않는 카테고리에 등록 시도 (예외 테스트)
     @Test
-    @DisplayName("스티커 등록 성공: 카테고리가 존재하면 정상 저장되어야 한다")
-    void createSticker_Success() {
-        // Given (준비)
-        Integer categoryId = 10;
-        StickerRequestDTO requestDTO = StickerRequestDTO.builder()
-                .stickerCategoryId(categoryId)
-                .stickerName("Happy Dog")
-                .stickerImageUrl("/dog.png")
-                .build();
+    public void testRegisterFail() {
+        // 존재할 리 없는 ID 설정
+        Integer wrongCategoryId = 99999;
 
-        StickerCategoryEntity mockCategory = StickerCategoryEntity.builder()
-                .stickerCategoryId(categoryId)
-                .name("Animals")
-                .build();
-
-        // "DB에서 아이디 10번 찾으면, 이 가짜 카테고리를 줘!"라고 조수에게 시나리오 전달
-        given(stickerCategoryRepository.findById(categoryId))
-                .willReturn(Optional.of(mockCategory));
-
-        // "저장하면, ID가 1인 스티커가 나왔다고 쳐!"
-        StickerEntity savedSticker = StickerEntity.builder()
-                .stickerId(1)
-                .stickerCategory(mockCategory)
-                .stickerName("Happy Dog")
-                .build();
-
-        given(stickerRepository.save(any(StickerEntity.class)))
-                .willReturn(savedSticker);
-
-        // When (실행)
-        Integer resultId = stickerService.createSticker(requestDTO);
-
-        // Then (검증)
-        assertThat(resultId).isEqualTo(1);
-
-        // 실제로 리포지토리의 save가 호출되었는지 확인 (검증)
-        verify(stickerRepository, times(1)).save(any(StickerEntity.class));
-    }
-
-    @Test
-    @DisplayName("스티커 등록 실패: 존재하지 않는 카테고리 ID면 예외가 발생해야 한다")
-    void createSticker_Fail_NoCategory() {
-        // Given
-        Integer wrongCategoryId = 999;
-        StickerRequestDTO requestDTO = StickerRequestDTO.builder()
+        StickerRequestDTO stickerReq = StickerRequestDTO.builder()
                 .stickerCategoryId(wrongCategoryId)
+                .stickerName("Ghost Sticker")
+                .stickerImageUrl("/test/ghost.png")
                 .build();
 
-        // "999번 찾으면? 텅 빈 거(Empty) 줘."
-        given(stickerCategoryRepository.findById(wrongCategoryId))
-                .willReturn(Optional.empty());
+        // 예외가 터져야 성공!
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            stickerService.createSticker(stickerReq);
+        });
 
-        // When & Then (실행 및 예외 검증)
-        assertThatThrownBy(() -> stickerService.createSticker(requestDTO))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("존재하지 않는 카테고리");
+        log.info("예외 발생 테스트 성공 (존재하지 않는 카테고리)");
     }
 
+    // 3. 카테고리별 조회 테스트 (ModelMapper 동작 확인)
     @Test
-    @DisplayName("카테고리별 스티커 조회: ModelMapper가 DTO로 잘 변환하는지 확인")
-    void getStickersByCategoryId_Test() {
-        // Given
-        Integer categoryId = 10;
-        StickerCategoryEntity category = StickerCategoryEntity.builder()
-                .stickerCategoryId(categoryId)
-                .name("Emotions")
+    public void testGetByCategoryId() {
+        // (데이터가 없으면 테스트가 안 되므로, 위 testRegister()가 실행된 후라고 가정하거나
+        //  여기서 데이터를 직접 넣고 테스트하는 것이 안전합니다.)
+
+        // 테스트를 위해 데이터 세트 준비
+        StickerCategoryRequestDTO catReq = StickerCategoryRequestDTO.builder().name("Summer Vibe").build();
+        Integer catId = stickerCategoryService.createCategory(catReq);
+
+        StickerRequestDTO stickerReq = StickerRequestDTO.builder()
+                .stickerCategoryId(catId)
+                .stickerName("Sun")
+                .stickerImageUrl("sun.png")
                 .build();
+        stickerService.createSticker(stickerReq);
 
-        StickerEntity sticker1 = StickerEntity.builder()
-                .stickerId(1)
-                .stickerCategory(category)
-                .stickerName("Smile")
-                .build();
 
-        StickerEntity sticker2 = StickerEntity.builder()
-                .stickerId(2)
-                .stickerCategory(category)
-                .stickerName("Sad")
-                .build();
+        // [검증 시작]
+        List<StickerResponseDTO> result = stickerService.getStickersByCategoryId(catId);
 
-        // 가짜 리스트 반환 설정
-        given(stickerRepository.findByStickerCategory_StickerCategoryId(categoryId))
-                .willReturn(List.of(sticker1, sticker2));
+        log.info("조회된 스티커 개수: " + result.size());
 
-        // When
-        List<StickerResponseDTO> result = stickerService.getStickersByCategoryId(categoryId);
+        result.forEach(dto -> {
+            log.info("----------------------------------");
+            log.info("Sticker Name: " + dto.getStickerName());
+            log.info("Image URL   : " + dto.getStickerImageUrl());
+            // ★ 가장 중요한 확인 포인트: LOOSE 전략으로 카테고리 이름이 잘 들어왔는가?
+            log.info("Category Name (Mapped): " + dto.getCategoryName());
+            log.info("----------------------------------");
 
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getStickerName()).isEqualTo("Smile");
-        // ModelMapper가 연관된 카테고리 이름도 잘 가져왔는지 확인 (DTO에 categoryName 필드가 있다고 가정)
-        // assertThat(result.get(0).getCategoryName()).isEqualTo("Emotions");
+            // 검증 코드
+            Assertions.assertEquals("Summer Vibe", dto.getCategoryName());
+        });
     }
 
+    // 4. 삭제 테스트
     @Test
-    @DisplayName("스티커 삭제: 존재하면 삭제 메서드를 호출해야 한다")
-    void deleteSticker_Success() {
-        // Given
-        Integer stickerId = 1;
-        given(stickerRepository.existsById(stickerId)).willReturn(true);
+    public void testDelete() {
+        // 테스트용 데이터 생성
+        StickerCategoryRequestDTO catReq = StickerCategoryRequestDTO.builder().name("To be deleted").build();
+        Integer catId = stickerCategoryService.createCategory(catReq);
 
-        // When
+        StickerRequestDTO stickerReq = StickerRequestDTO.builder()
+                .stickerCategoryId(catId)
+                .stickerName("Delete Me")
+                .stickerImageUrl("del.png")
+                .build();
+        Integer stickerId = stickerService.createSticker(stickerReq);
+
+        log.info("삭제 전 ID: " + stickerId);
+
+        // 삭제 수행
         stickerService.deleteSticker(stickerId);
 
-        // Then
-        // deleteById가 딱 1번 호출되었는지 감시
-        verify(stickerRepository, times(1)).deleteById(stickerId);
+        log.info("삭제 수행 완료");
+
+        // (선택) 삭제 후 조회 시 에러가 나거나 비어있는지 확인할 수 있음
     }
 }

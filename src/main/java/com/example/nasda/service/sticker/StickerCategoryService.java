@@ -1,7 +1,8 @@
-package com.example.nasda.service;
+package com.example.nasda.service.sticker;
 
-import com.example.nasda.dto.StickerCategoryRequestDTO;
-import com.example.nasda.dto.StickerCategoryResponseDTO;
+import com.example.nasda.dto.sticker.StickerCategoryRequestDTO;
+import com.example.nasda.dto.sticker.StickerCategoryResponseDTO;
+
 import java.util.List;
 
 public interface StickerCategoryService {

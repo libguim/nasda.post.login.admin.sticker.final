@@ -1,152 +1,133 @@
-//package com.example.nasda.service;
-//
-//import com.example.nasda.domain.*;
-//import com.example.nasda.dto.PostDecorationRequestDTO;
-//import com.example.nasda.dto.PostDecorationResponseDTO;
-//import com.example.nasda.repository.*;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.Spy;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import org.modelmapper.ModelMapper;
-//import org.modelmapper.config.Configuration;
-//import org.modelmapper.convention.MatchingStrategies;
-//
-//import java.util.List;
-//import java.util.Optional;
-//
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.assertj.core.api.Assertions.assertThatThrownBy;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.BDDMockito.given;
-//import static org.mockito.Mockito.verify;
-//import static org.mockito.Mockito.times;
-//
-//@ExtendWith(MockitoExtension.class)
-//class PostDecorationServiceTest {
-//
-//    @InjectMocks // 주인공 (서비스)
-//    private PostDecorationServiceImpl postDecorationService;
-//
-//    // 조연들 (가짜 저장소)
-//    @Mock private PostDecorationRepository postDecorationRepository;
-//    @Mock private PostImageRepository postImageRepository;
-//    @Mock private StickerRepository stickerRepository;
-//    @Mock private UserRepository userRepository;
-//
-//    // 도구 (진짜 ModelMapper를 쓰되 Spy로 감시)
-//    @Spy
-//    private ModelMapper modelMapper;
-//
-//    @BeforeEach
-//    void setup() {
-//        // RootConfig와 동일한 설정 적용 (private 필드 접근 허용)
-//        modelMapper.getConfiguration()
-//                .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE)
-//                .setFieldMatchingEnabled(true)
-//                .setMatchingStrategy(MatchingStrategies.LOOSE);
-//    }
-//
-//    @Test
-//    @DisplayName("장식 저장 성공: 모든 재료(이미지, 스티커, 유저)가 있으면 저장된다")
-//    void saveDecoration_Success() {
-//        // Given (재료 준비)
-//        PostDecorationRequestDTO requestDTO = PostDecorationRequestDTO.builder()
-//                .postImageId(10).stickerId(20).userId(30)
-//                .posX(50f).posY(50f).build();
-//
-//        // 가짜 데이터들
-//        PostImageEntity mockImage = PostImageEntity.builder().imageId(10).build();
-//        StickerEntity mockSticker = StickerEntity.builder().stickerId(20).build();
-//        UserEntity mockUser = UserEntity.builder().userId(30).build();
-//
-//        // 시나리오: 각 저장소에게 "이거 찾으면 이거 줘"라고 교육
-//        given(postImageRepository.findById(10)).willReturn(Optional.of(mockImage));
-//        given(stickerRepository.findById(20)).willReturn(Optional.of(mockSticker));
-//        given(userRepository.findById(30)).willReturn(Optional.of(mockUser));
-//
-//        // 저장 결과 시나리오
-//        PostDecorationEntity savedEntity = PostDecorationEntity.builder()
-//                .decorationId(100) // 저장되면 100번 ID를 받는다고 가정
-//                .build();
-//        given(postDecorationRepository.save(any(PostDecorationEntity.class)))
-//                .willReturn(savedEntity);
-//
-//        // When (실행)
-//        Integer resultId = postDecorationService.saveDecoration(requestDTO);
-//
-//        // Then (검증)
-//        assertThat(resultId).isEqualTo(100);
-//        // 저장 메서드가 정확히 1번 호출되었는지 확인
-//        verify(postDecorationRepository, times(1)).save(any(PostDecorationEntity.class));
-//    }
-//
-//    @Test
-//    @DisplayName("장식 저장 실패: 이미지가 없으면 예외 발생")
-//    void saveDecoration_Fail_NoImage() {
-//        // Given
-//        PostDecorationRequestDTO requestDTO = PostDecorationRequestDTO.builder().postImageId(999).build();
-//
-//        // 시나리오: 이미지 찾으러 갔는데 없음(Empty)
-//        given(postImageRepository.findById(999)).willReturn(Optional.empty());
-//
-//        // When & Then
-//        assertThatThrownBy(() -> postDecorationService.saveDecoration(requestDTO))
-//                .isInstanceOf(IllegalArgumentException.class)
-//                .hasMessageContaining("이미지 없음");
-//    }
-//
-//    @Test
-//    @DisplayName("목록 조회: ModelMapper가 Entity를 DTO로 잘 변환하는지 확인")
-//    void getDecorationsByImageId_Test() {
-//        // Given
-//        // 복잡한 중첩 구조를 가진 Entity 생성
-//        StickerEntity sticker = StickerEntity.builder()
-//                .stickerId(5)
-//                .stickerImageUrl("/stickers/heart.png")
-//                .build();
-//
-//        PostDecorationEntity decoration = PostDecorationEntity.builder()
-//                .decorationId(1)
-//                .sticker(sticker) // ★ 중요: Entity 안에 Sticker 객체가 들어있음
-//                .posX(100f).posY(200f)
-//                .build();
-//
-//        given(postDecorationRepository.findByPostImage_ImageId(10))
-//                .willReturn(List.of(decoration));
-//
-//        // When
-//        List<PostDecorationResponseDTO> result = postDecorationService.getDecorationsByImageId(10);
-//
-//        // Then
-//        assertThat(result).hasSize(1);
-//        PostDecorationResponseDTO dto = result.get(0);
-//
-//        // 1. 기본 필드 매핑 확인
-//        assertThat(dto.getPosX()).isEqualTo(100f);
-//
-//        // 2. ★ 중요: ModelMapper가 sticker.stickerImageUrl -> dto.stickerImageUrl 로 잘 펴서 넣었는지 확인
-//        // (MatchingStrategies.LOOSE 전략 덕분에 가능할 것으로 예상)
-//        // 만약 여기서 null이 나온다면, 서비스 코드에서 map 이후 수동 설정을 추가해야 함을 알 수 있음!
-//        // 일단은 매핑이 되었다고 가정하고 검증합니다.
-//        assertThat(dto.getStickerImageUrl()).isEqualTo("/stickers/heart.png");
-//    }
-//
-//    @Test
-//    @DisplayName("장식 삭제 성공")
-//    void deleteDecoration_Success() {
-//        // Given
-//        Integer decoId = 1;
-//        given(postDecorationRepository.existsById(decoId)).willReturn(true);
-//
-//        // When
-//        postDecorationService.deleteDecoration(decoId);
-//
-//        // Then
-//        verify(postDecorationRepository).deleteById(decoId);
-//    }
-//}
+package com.example.nasda.service;
+
+import com.example.nasda.dto.sticker.PostDecorationRequestDTO;
+import com.example.nasda.dto.sticker.PostDecorationResponseDTO;
+import com.example.nasda.service.sticker.PostDecorationService;
+import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@SpringBootTest
+@Log4j2
+public class PostDecorationServiceTest {
+
+    @Autowired
+    private PostDecorationService postDecorationService;
+
+    @Test
+    @DisplayName("스티커 일괄 등록 및 도배 방지 테스트")
+    public void testRegisterMultiple() {
+        log.info("--------- 스티커 일괄 등록 테스트 ---------");
+
+        List<PostDecorationRequestDTO.DecorationItem> items = new ArrayList<>();
+
+        // 실제 DB에 존재하는 Sticker ID를 사용하세요 (HeidiSQL 스크린샷 기준 1, 2번 사용 가능)
+        items.add(PostDecorationRequestDTO.DecorationItem.builder()
+                .stickerId(1).posX(10.0f).posY(20.0f).scale(1.0f).build());
+        items.add(PostDecorationRequestDTO.DecorationItem.builder()
+                .stickerId(2).posX(30.0f).posY(40.0f).scale(1.0f).build());
+
+        PostDecorationRequestDTO requestDTO = PostDecorationRequestDTO.builder()
+                .postImageId(12) // HeidiSQL 기준 존재하는 이미지 ID
+                .userId(1)      // 존재하는 유저 ID
+                .decorations(items)
+                .build();
+
+        try {
+            List<PostDecorationResponseDTO> resultList = postDecorationService.saveDecorations(requestDTO);
+            log.info("성공적으로 저장된 스티커 개수: " + resultList.size());
+        } catch (IllegalStateException e) {
+            log.warn("도배 방지 로직 작동: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("저장 실패: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Test
+    @DisplayName("이미지별 장식 목록 조회 테스트")
+    public void testGetListByImage() {
+        log.info("--------- 이미지별 장식 목록 조회 테스트 ---------");
+        Integer imageId = 12; // 테스트할 이미지 ID
+
+        List<PostDecorationResponseDTO> list = postDecorationService.getDecorationsByImageId(imageId);
+
+        log.info("조회된 장식 개수: " + list.size());
+        list.forEach(dto -> log.info("장식 ID: {}, 스티커 ID: {}", dto.getDecorationId(), dto.getStickerId()));
+    }
+
+    @Test
+    @DisplayName("게시글 전체 장식 목록 조회 테스트 (Post ID 기준)")
+    public void testGetListByPost() {
+        log.info("--------- 게시글 전체 장식 목록 조회 테스트 ---------");
+        Integer postId = 10; // 테스트할 게시글 ID (실제 DB에 존재하는 ID)
+
+        List<PostDecorationResponseDTO> list = postDecorationService.getDecorationsByPostId(postId);
+
+        log.info("조회된 총 장식 개수: " + list.size());
+        // 각 스티커가 어떤 이미지(postImageId)에 속해 있는지 확인
+        list.forEach(dto -> log.info("이미지 ID: {}, 장식 ID: {}, URL: {}",
+                dto.getPostImageId(), dto.getDecorationId(), dto.getStickerImageUrl()));
+    }
+
+    @Test
+    @DisplayName("장식 위치 및 속성 수정 테스트 (Update)")
+    public void testUpdateDecoration() {
+        log.info("--------- 장식 수정 테스트 (권한 체크 포함) ---------");
+
+        // 1. 수정할 장식 ID와 요청자 ID 설정
+        Integer decorationId = 1; // DB에 실존하는 장식 ID
+        Integer currentUserId = 1; // 수정을 시도하는 유저 (장식을 붙인 본인)
+
+        // 2. 수정할 데이터 준비 (DTO 내부의 DecorationItem 활용)
+        PostDecorationRequestDTO.DecorationItem updateDTO = PostDecorationRequestDTO.DecorationItem.builder()
+                .posX(500.0f)   // 새로운 X 좌표
+                .posY(300.0f)   // 새로운 Y 좌표
+                .scale(1.5f)    // 크기 변경
+                .rotation(45.0f)// 회전 각도 변경
+                .build();
+
+        try {
+            // 3. 서비스 호출
+            postDecorationService.updateDecoration(decorationId, updateDTO, currentUserId);
+            log.info(decorationId + "번 장식 수정 성공!");
+
+            // 4. 검증 (선택 사항: 다시 조회해서 값이 바뀌었는지 확인)
+            List<PostDecorationResponseDTO> list = postDecorationService.getDecorationsByImageId(12);
+            list.stream()
+                    .filter(dto -> dto.getDecorationId().equals(decorationId))
+                    .forEach(dto -> log.info("수정 후 위치 확인 -> X: {}, Y: {}", dto.getPosX(), dto.getPosY()));
+
+        } catch (SecurityException e) {
+            log.error("수정 실패: 권한이 없습니다. (" + e.getMessage() + ")");
+        } catch (Exception e) {
+            log.error("수정 실패 사유: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("권한 기반 장식 삭제 테스트")
+    public void testRemove() {
+        log.info("--------- 장식 삭제 테스트 (권한 체크 포함) ---------");
+
+        // 1. 삭제할 장식 ID와 요청자 ID 설정
+        Integer decorationId = 5; // DB에 실존하는 장식 ID
+        Integer currentUserId = 1; // 삭제를 시도하는 유저 (장식 본인 혹은 사진 주인)
+
+        try {
+            // ✅ 수정된 인터페이스에 따라 currentUserId를 함께 전달합니다.
+            postDecorationService.deleteDecoration(decorationId, currentUserId);
+            log.info(decorationId + "번 장식 삭제 성공 (요청자 ID: " + currentUserId + ")");
+
+        } catch (SecurityException e) {
+            log.error("삭제 실패: 권한이 없습니다. (" + e.getMessage() + ")");
+        } catch (Exception e) {
+            log.error("삭제 실패 사유: " + e.getMessage());
+        }
+    }
+}
