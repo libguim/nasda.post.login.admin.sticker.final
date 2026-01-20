@@ -159,11 +159,31 @@ public class AdminServiceImpl implements AdminService {
                 .categoryId(dto.getCategoryId()).categoryName(dto.getCategoryName()).isActive(true).build());
     }
 
+//    @Override
+//    public void removeCategory(Integer id) {
+//        postReportRepository.deleteByCategoryId(id);
+//        postRepository.deleteByCategoryId(id);
+//        categoryRepository.deleteById(id);
+//    }
+
     @Override
+    // 클래스 상단에 이미 @Transactional이 있으므로 생략 가능합니다.
     public void removeCategory(Integer id) {
+        log.info("카테고리 삭제 시작 - 관련 데이터 순차 삭제 중... ID: " + id);
+
+        // 1. [가장 중요] 이미지 데이터 삭제 (외래키 제약 조건 해결)
+        postRepository.deletePostImagesByCategoryId(id);
+
+        // 2. 게시글 신고 기록 삭제
         postReportRepository.deleteByCategoryId(id);
+
+        // 3. 게시글 본체 삭제 (이제 자식인 이미지가 없어서 안전함)
         postRepository.deleteByCategoryId(id);
+
+        // 4. 마지막으로 카테고리 본체 삭제
         categoryRepository.deleteById(id);
+
+        log.info("카테고리(ID: " + id + ") 및 모든 하위 데이터 삭제 완료");
     }
 
     // 6. 단건 조회

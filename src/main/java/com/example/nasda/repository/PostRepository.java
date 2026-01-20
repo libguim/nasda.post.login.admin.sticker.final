@@ -55,6 +55,10 @@ public interface PostRepository extends JpaRepository<PostEntity, Integer> {
     Page<PostEntity> findByUser_UserId(Integer userId, Pageable pageable);
 
     @Modifying
+    @Query(value = "DELETE FROM post_images WHERE post_id IN (SELECT post_id FROM posts WHERE category_id = :categoryId)", nativeQuery = true)
+    void deletePostImagesByCategoryId(@Param("categoryId") Integer categoryId);
+
+    @Modifying
     @Query("delete from PostEntity p where p.category.categoryId = :categoryId")
     void deleteByCategoryId(@Param("categoryId") Integer categoryId);
 }
