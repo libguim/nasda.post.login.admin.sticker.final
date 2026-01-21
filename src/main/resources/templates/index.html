@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head th:replace="~{layout/header :: head}"></head>
 
-<body class="min-h-screen bg-white">
+<body class="min-h-screen bg-white page-home">
 <div th:replace="~{layout/header :: header}"></div>
 
-<!-- ✅ 카테고리 바 (sticky 제거: 스크롤 내려도 따라오지 않음) -->
+<!-- ✅ 카테고리 바 -->
 <div class="bg-white border-b border-[#E8D5C4]/30">
     <div class="max-w-[1800px] mx-auto px-6 py-4">
         <div class="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth">
@@ -67,7 +67,7 @@
     </div>
 </div>
 
-<!-- ✅ 히어로 영역 -->
+<!-- ✅ 히어로 -->
 <div class="bg-gradient-to-b from-[#F9F6F1] to-white border-b border-[#E8D5C4]/30 relative">
     <div class="max-w-[1800px] mx-auto px-6 py-16 text-center">
         <h2 class="text-[#8B7355] mb-4"
@@ -76,23 +76,32 @@
         </h2>
         <p class="text-[#A89080] max-w-2xl mx-auto"
            style="font-family: 'Noto Sans KR', sans-serif; font-size: 1.125rem; line-height: 1.8;">
-            일상 속 작은 순간들부터 특별한 영감까지,<br />
+            일상 속 작은 순간들부터 특별한 영감까지,<br/>
             나의 영감 저장소에서 아름다운 기록을 시작하세요
         </p>
     </div>
     <div class="absolute bottom-0 left-0 right-0 h-20 overflow-hidden">
         <svg viewBox="0 0 1800 80" class="w-full h-full" preserveAspectRatio="none" style="display: block;">
-            <path d="M 0,80 Q 900,0 1800,80 L 1800,80 L 0,80 Z" fill="white" />
+            <path d="M 0,80 Q 900,0 1800,80 L 1800,80 L 0,80 Z" fill="white"/>
         </svg>
     </div>
 </div>
 
 <main class="max-w-[1800px] mx-auto px-6 py-12">
 
-    <!-- ✅ grid는 항상 존재(빈 상태도 JS가 교체 렌더 가능하게) -->
-    <div id="masonryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <!-- ✅ 검색중 안내(선택) -->
+    <div th:if="${isSearchPage == true}" class="mb-6 text-[#8B7355]" style="font-family:'Noto Sans KR', sans-serif;">
+        <span class="font-semibold">검색어:</span>
+        <span th:text="${keyword}">keyword</span>
+        <span class="mx-2">|</span>
+        <span class="font-semibold">유형:</span>
+        <span th:text="${type}">type</span>
+    </div>
 
-        <!-- ✅ 게시글 없을 때(서버 렌더링) -->
+    <!-- ✅ Masonry Grid -->
+    <div id="masonryGrid">
+
+        <!-- ✅ 게시글 없을 때 -->
         <div th:if="${posts == null or posts.isEmpty()}" class="col-span-full text-center py-24">
             <p class="text-2xl font-semibold text-[#5A4D41]" style="font-family: 'Playfair Display', serif;">
                 아직 작성된 게시글이 없어요
@@ -111,17 +120,17 @@
             </div>
         </div>
 
-        <!-- ✅ 게시글 있을 때(서버 렌더링) -->
+        <!-- ✅ 게시글 있을 때 -->
         <a th:each="post : ${posts}"
            th:if="${post != null and post.id != null}"
            th:href="@{/posts/{id}(id=${post.id})}"
-           class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
+           class="home-card group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
 
-            <img th:src="${post.imageUrl != null and !#strings.isEmpty(post.imageUrl)} ? @{${post.imageUrl}} : 'https://picsum.photos/400/600'"
+            <img th:src="${(post.imageUrl != null and !#strings.isEmpty(post.imageUrl)) ? post.imageUrl : 'https://picsum.photos/400/600'}"
                  th:alt="${post.title}"
-                 class="w-full h-[320px] object-contain bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
+                 class="home-card-img w-full bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
                  style="display:block;"
-                 onerror="this.onerror=null;this.src='https://picsum.photos/400/600';" />
+                 onerror="this.onerror=null;this.src='https://picsum.photos/400/600';"/>
 
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div class="absolute bottom-0 left-0 right-0 p-4">
@@ -160,362 +169,12 @@
 <div th:replace="~{layout/header :: searchModal}"></div>
 <script th:replace="~{layout/header :: commonScript}"></script>
 
-<!-- ✅ 서버에서 hasNext/size를 내려주면 프론트 초기 상태 정확해짐 -->
 <script th:inline="javascript">
-    window.__HOME_HAS_NEXT__ = /*[[${hasNext}]]*/ true;
+    window.__IS_SEARCH_PAGE__ = /*[[${isSearchPage}]]*/ false;
+    window.__HOME_HAS_NEXT__  = /*[[${hasNext}]]*/ true;
     window.__HOME_PAGE_SIZE__ = /*[[${size}]]*/ 12;
 </script>
 
-<script th:inline="none">
-    // =========================
-    // Infinite Scroll (existing)
-    // =========================
-    let currentPage = 0;
-    let isLoading = false;
-    let hasMore = (typeof window.__HOME_HAS_NEXT__ === 'boolean') ? window.__HOME_HAS_NEXT__ : true;
-    let activeCategory = '전체';
-    const pageSize = (typeof window.__HOME_PAGE_SIZE__ === 'number') ? window.__HOME_PAGE_SIZE__ : 12;
-
-    // ✅ Scroll Restore State
-    const HOME_STATE_KEY = 'homeScrollState:v1';
-
-    function saveHomeState(extra = {}) {
-        try {
-            const state = {
-                scrollY: window.scrollY || 0,
-                currentPage,
-                hasMore,
-                activeCategory,
-                pageSize,
-                ts: Date.now(),
-                ...extra
-            };
-            sessionStorage.setItem(HOME_STATE_KEY, JSON.stringify(state));
-        } catch (e) {
-            console.warn('saveHomeState failed:', e);
-        }
-    }
-
-    function loadHomeState() {
-        try {
-            const raw = sessionStorage.getItem(HOME_STATE_KEY);
-            if (!raw) return null;
-            return JSON.parse(raw);
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function clearHomeState() {
-        try { sessionStorage.removeItem(HOME_STATE_KEY); } catch (e) {}
-    }
-
-    function navigateToCreate() {
-        window.location.href = '/posts/create';
-    }
-
-    function escapeHtml(str) {
-        return String(str ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function renderEmptyStateWithCta() {
-        const masonryGrid = document.getElementById('masonryGrid');
-        if (!masonryGrid) return;
-
-        masonryGrid.innerHTML = `
-            <div class="col-span-full text-center py-24">
-                <p class="text-2xl font-semibold text-[#5A4D41]" style="font-family:'Playfair Display', serif;">
-                    아직 작성된 게시글이 없어요
-                </p>
-                <p class="mt-3 text-[#8B7355]" style="font-family:'Noto Sans KR', sans-serif;">
-                    오른쪽 아래 <b>+</b> 버튼을 눌러 첫 기록을 남겨보세요!
-                </p>
-
-                <div class="mt-8">
-                    <a href="/posts/create"
-                       class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#D4C4B0] text-white hover:bg-[#C9B5A0] transition"
-                       style="font-family:'Noto Sans KR', sans-serif;">
-                        <span class="text-xl">＋</span>
-                        <span class="font-medium">게시글 작성</span>
-                    </a>
-                </div>
-            </div>
-        `;
-    }
-
-    function setActiveCategory(category) {
-        activeCategory = category;
-
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.classList.remove('bg-[#D4C4B0]', 'text-white');
-            btn.classList.add('bg-[#F9F6F1]', 'text-[#8B7355]', 'hover:bg-[#F0EBE3]');
-        });
-
-        const selectedBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
-        if (selectedBtn) {
-            selectedBtn.classList.remove('bg-[#F9F6F1]', 'text-[#8B7355]', 'hover:bg-[#F0EBE3]');
-            selectedBtn.classList.add('bg-[#D4C4B0]', 'text-white');
-        }
-
-        currentPage = 0;
-        hasMore = true;
-        saveHomeState(); // ✅ category change also 저장
-        loadPostsByCategory(category);
-    }
-
-    // ✅ axios 있으면 axios, 없으면 fetch로 자동 fallback
-    async function apiGetPosts(params) {
-        const query = new URLSearchParams();
-        Object.entries(params).forEach(([k, v]) => {
-            if (v !== null && v !== undefined && v !== '') query.append(k, v);
-        });
-
-        const url = `/api/posts?${query.toString()}`;
-
-        if (window.axios && typeof window.axios.get === 'function') {
-            const res = await window.axios.get('/api/posts', { params });
-            return res.data;
-        }
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Failed to load posts');
-        return await res.json();
-    }
-
-    async function loadPostsByCategory(category) {
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        if (loadingIndicator) loadingIndicator.classList.remove('hidden');
-
-        try {
-            const page = await apiGetPosts({
-                page: 0,
-                size: pageSize,
-                category: category !== '전체' ? category : null
-            });
-
-            const posts = page.content || [];
-            renderPosts(posts);
-
-            hasMore = !page.last;
-            currentPage = page.number || 0;
-
-            saveHomeState(); // ✅ 상태 저장
-        } catch (e) {
-            console.error('게시물 로드 오류:', e);
-        } finally {
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
-        }
-    }
-
-    function renderPosts(posts) {
-        const masonryGrid = document.getElementById('masonryGrid');
-        if (!masonryGrid) return;
-
-        if (!posts || posts.length === 0) {
-            renderEmptyStateWithCta();
-            return;
-        }
-
-        masonryGrid.innerHTML = posts
-            .filter(p => p && p.id != null)
-            .map(post => {
-                const title = escapeHtml(post.title || '');
-                const imageUrl = (post.imageUrl && post.imageUrl.trim())
-                    ? post.imageUrl
-                    : 'https://picsum.photos/400/600';
-
-                return `
-                    <a href="/posts/${post.id}"
-                       class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
-                        <img src="${imageUrl}"
-                             alt="${title}"
-                             class="w-full h-[320px] object-contain bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
-                             style="display:block;"
-                             onerror="this.onerror=null;this.src='https://picsum.photos/400/600';" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div class="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
-                                    ${title}
-                                </h3>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            }).join('');
-    }
-
-    async function loadMorePosts() {
-        if (isLoading || !hasMore) return;
-
-        isLoading = true;
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        if (loadingIndicator) loadingIndicator.classList.remove('hidden');
-
-        try {
-            const page = await apiGetPosts({
-                page: currentPage + 1,
-                size: pageSize,
-                category: activeCategory !== '전체' ? activeCategory : null
-            });
-
-            const posts = page.content || [];
-            if (!posts || posts.length === 0) {
-                hasMore = false;
-                saveHomeState();
-                return;
-            }
-
-            currentPage = page.number;
-            hasMore = !page.last;
-            appendPosts(posts);
-
-            saveHomeState(); // ✅ 더 불러온 후 상태 저장
-        } catch (e) {
-            console.error('추가 게시물 로드 오류:', e);
-            hasMore = false;
-            saveHomeState();
-        } finally {
-            isLoading = false;
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
-        }
-    }
-
-    function appendPosts(posts) {
-        const masonryGrid = document.getElementById('masonryGrid');
-        if (!masonryGrid) return;
-
-        const postsHTML = (posts || [])
-            .filter(p => p && p.id != null)
-            .map(post => {
-                const title = escapeHtml(post.title || '');
-                const imageUrl = (post.imageUrl && post.imageUrl.trim())
-                    ? post.imageUrl
-                    : 'https://picsum.photos/400/600';
-
-                return `
-                    <a href="/posts/${post.id}"
-                       class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
-                        <img src="${imageUrl}"
-                             alt="${title}"
-                             class="w-full h-[320px] object-contain bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
-                             style="display:block;"
-                             onerror="this.onerror=null;this.src='https://picsum.photos/400/600';" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div class="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
-                                    ${title}
-                                </h3>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            }).join('');
-
-        masonryGrid.insertAdjacentHTML('beforeend', postsHTML);
-    }
-
-    // ✅ 복원용: 특정 페이지를 강제로 로드해서 append (restore에서 호출)
-    async function loadPageAndAppend(pageNum) {
-        const page = await apiGetPosts({
-            page: pageNum,
-            size: pageSize,
-            category: activeCategory !== '전체' ? activeCategory : null
-        });
-
-        const posts = page.content || [];
-        if (pageNum === 0) {
-            renderPosts(posts);
-        } else {
-            appendPosts(posts);
-        }
-
-        currentPage = page.number || pageNum;
-        hasMore = !page.last;
-        return page;
-    }
-
-    // ✅ 뒤로가기/새로고침 복원
-    async function restoreHomeIfNeeded() {
-        const state = loadHomeState();
-        if (!state) return;
-
-        // 너무 오래된 state는 무시
-        if (state.ts && Date.now() - state.ts > 2 * 60 * 60 * 1000) {
-            clearHomeState();
-            return;
-        }
-
-        // 저장된 카테고리 반영
-        if (state.activeCategory) {
-            activeCategory = state.activeCategory;
-            // 버튼 UI 반영
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('bg-[#D4C4B0]', 'text-white');
-                btn.classList.add('bg-[#F9F6F1]', 'text-[#8B7355]', 'hover:bg-[#F0EBE3]');
-            });
-            const selectedBtn = document.querySelector(`.category-btn[data-category="${activeCategory}"]`);
-            if (selectedBtn) {
-                selectedBtn.classList.remove('bg-[#F9F6F1]', 'text-[#8B7355]', 'hover:bg-[#F0EBE3]');
-                selectedBtn.classList.add('bg-[#D4C4B0]', 'text-white');
-            }
-        }
-
-        // 저장된 currentPage까지 다시 로드
-        const targetPage = Number(state.currentPage);
-        if (!Number.isFinite(targetPage) || targetPage < 0) {
-            requestAnimationFrame(() => window.scrollTo(0, state.scrollY || 0));
-            return;
-        }
-
-        // page=0부터 targetPage까지 순서대로 쌓기
-        try {
-            isLoading = true;
-            for (let p = 0; p <= targetPage; p++) {
-                await loadPageAndAppend(p);
-            }
-        } catch (e) {
-            console.warn('restoreHomeIfNeeded load failed:', e);
-        } finally {
-            isLoading = false;
-        }
-
-        requestAnimationFrame(() => window.scrollTo(0, state.scrollY || 0));
-    }
-
-    // ✅ 상세로 이동하기 직전에 상태 저장 (/posts/{id})
-    document.addEventListener('click', (e) => {
-        const a = e.target.closest('a');
-        if (!a) return;
-        const href = a.getAttribute('href') || '';
-        if (href.startsWith('/posts/')) {
-            saveHomeState();
-        }
-    });
-
-    // ✅ 스크롤 저장(가벼운 throttle)
-    let __saveT = null;
-    window.addEventListener('scroll', function() {
-        const scrollPosition = window.innerHeight + window.scrollY;
-        const threshold = document.body.offsetHeight - 500;
-        if (scrollPosition >= threshold) loadMorePosts();
-
-        if (__saveT) return;
-        __saveT = setTimeout(() => {
-            saveHomeState();
-            __saveT = null;
-        }, 250);
-    });
-
-    // BFCache 복원(pageshow) + 일반 로드(DOMContentLoaded)
-    window.addEventListener('pageshow', () => {
-        restoreHomeIfNeeded();
-    });
-    document.addEventListener('DOMContentLoaded', restoreHomeIfNeeded);
-</script>
+<script src="/js/main.js"></script>
 </body>
 </html>

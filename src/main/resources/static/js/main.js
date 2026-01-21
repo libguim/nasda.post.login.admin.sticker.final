@@ -1,12 +1,41 @@
 /**
  * 나의 영감 저장소 - Main JavaScript
  * 브런치/핀터레스트 감성 디자인
+ *
+ * ✅ 핵심:
+ * - URL에 keyword가 있으면 "검색 모드"
+ * - 검색 모드에서는:
+ *   1) 홈 상태 복원(sessionStorage) 금지
+ *   2) 카테고리 클릭 시 API 로딩 금지
+ *   3) 무한 스크롤 금지
  */
 
-// ========================================
-// ✅ (추가) 헤더에서 호출하는 함수명 브릿지
-//    header가 openSearchModal()/closeSearchModal()을 호출해도 동작하도록 보장
-// ========================================
+/** ✅ 페이지 구분 */
+function isHomePage() {
+    return location.pathname === "/" || location.pathname === "";
+}
+
+/** ✅ 공통 유틸 */
+function escapeHtml(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function showLoadingSpinner() {
+    const indicator = document.getElementById("loadingIndicator");
+    if (indicator) indicator.classList.remove("hidden");
+}
+
+function hideLoadingSpinner() {
+    const indicator = document.getElementById("loadingIndicator");
+    if (indicator) indicator.classList.add("hidden");
+}
+
+/** ✅ 헤더 호출 브릿지 */
 function openSearchModal() {
     openSearchModalLegacy();
 }
@@ -14,485 +43,432 @@ function closeSearchModal() {
     closeSearchModalLegacy();
 }
 
-// ========================================
-// 1. 전역 변수
-// ========================================
-let currentCategory = '전체';
-let searchQuery = '';
+/** ========================================
+ * 1. 전역 변수
+ * ======================================== */
+let currentCategory = "전체";
 let isLoading = false;
 
-// ========================================
-// 2. 모바일 검색 모달
-// ========================================
+/** ========================================
+ * 2. 모바일 검색 모달
+ * ======================================== */
 function openSearchModalLegacy() {
-    const modal = document.getElementById('searchModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    const modal = document.getElementById("searchModal");
+    if (!modal) return;
 
-        const input = modal.querySelector('.search-input-modal');
-        if (input) {
-            setTimeout(() => input.focus(), 100);
-        }
+    if (modal.classList && modal.classList.contains("hidden")) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    } else {
+        modal.style.display = "flex";
     }
+
+    document.body.style.overflow = "hidden";
+
+    const input = modal.querySelector(".search-input-modal");
+    if (input) setTimeout(() => input.focus(), 100);
 }
 
 function closeSearchModalLegacy() {
-    const modal = document.getElementById('searchModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
+    const modal = document.getElementById("searchModal");
+    if (!modal) return;
+
+    if (modal.classList && !modal.classList.contains("hidden")) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    } else {
+        modal.style.display = "none";
     }
+    document.body.style.overflow = "";
 }
 
-// 모달 외부 클릭 시 닫기
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('searchModal');
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("searchModal");
     if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeSearchModal();
-            }
+        modal.addEventListener("click", function (e) {
+            if (e.target === modal) closeSearchModalLegacy();
         });
     }
-
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeSearchModal();
-        }
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeSearchModalLegacy();
     });
 });
 
-// ========================================
-// 3. Masonry Grid 레이아웃 최적화
-// ========================================
-function initMasonryLayout() {
-    const grid = document.getElementById('masonryGrid');
-    if (!grid) return;
-
-    // 이미지 로드 완료 후 레이아웃 재계산
-    const images = grid.querySelectorAll('img');
-    let loadedImages = 0;
-
-    images.forEach(img => {
-        if (img.complete) {
-            loadedImages++;
-        } else {
-            img.addEventListener('load', function() {
-                loadedImages++;
-                if (loadedImages === images.length) {
-                    optimizeLayout();
-                }
-            });
-
-            img.addEventListener('error', function() {
-                // 이미지 로드 실패 시 placeholder
-                this.src = 'https://via.placeholder.com/400x600?text=No+Image';
-                loadedImages++;
-                if (loadedImages === images.length) {
-                    optimizeLayout();
-                }
-            });
-        }
-    });
-
-    if (loadedImages === images.length) {
-        optimizeLayout();
-    }
-}
-
-function optimizeLayout() {
-    const grid = document.getElementById('masonry-grid');
-    if (!grid) return;
-
-    // CSS Grid는 자동으로 레이아웃을 처리하므로
-    // 추가적인 높이 조정이 필요한 경우에만 사용
-    console.log('Layout optimized');
-}
-
-// ========================================
-// 4. 무한 스크롤 (선택사항)
-// ========================================
-let currentPage = 1;
-let hasMore = true;
-
-function initInfiniteScroll() {
-    window.addEventListener('scroll', function() {
-        // 페이지 하단에 가까워지면 다음 페이지 로드
-        const scrollPosition = window.innerHeight + window.scrollY;
-        const threshold = document.body.offsetHeight - 500;
-
-        if (scrollPosition >= threshold && !isLoading && hasMore) {
-            loadMorePosts();
-        }
-    });
-}
-
-function loadMorePosts() {
-    if (isLoading) return;
-
-    isLoading = true;
-    showLoadingSpinner();
-
-    // Axios 또는 fetch를 사용하여 서버에서 데이터 가져오기
-    // 예시:
-    fetch(`/api/posts?page=${currentPage + 1}&category=${currentCategory}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.posts && data.posts.length > 0) {
-                appendPosts(data.posts);
-                currentPage++;
-            } else {
-                hasMore = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading posts:', error);
-        })
-        .finally(() => {
-            isLoading = false;
-            hideLoadingSpinner();
-        });
-}
-
-function appendPosts(posts) {
-    const grid = document.getElementById('masonryGrid');
-    if (!grid) return;
-
-    posts.forEach(post => {
-        const postElement = createPostElement(post);
-        grid.appendChild(postElement);
-    });
-
-    // 레이아웃 재계산
-    initMasonryLayout();
-}
-
-function createPostElement(post) {
-    const div = document.createElement('div');
-    div.className = 'masonry-item';
-
-    const imageHtml = post.images && post.images.length > 0
-        ? `<div class="post-image">
-               <img src="${post.images[0]}" alt="${post.title}">
-           </div>`
-        : '';
-
-    div.innerHTML = `
-    <a href="/posts/${post.id}" class="post-card">
-            ${imageHtml}
-            <div class="post-info">
-                <h3 class="post-title">${post.title}</h3>
-                <p class="post-description">${post.description || ''}</p>
-                <div class="post-meta">
-                    <span class="post-category">${post.category}</span>
-                    <span class="post-author">${post.author?.username || 'Anonymous'}</span>
-                </div>
-            </div>
-        </a>
-    `;
-
-    return div;
-}
-
-function showLoadingSpinner() {
-    let spinner = document.getElementById('loadingSpinner');
-    if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'loadingSpinner';
-        spinner.className = 'loading';
-        spinner.innerHTML = '<div class="spinner"></div>';
-        document.querySelector('.main-content').appendChild(spinner);
-    }
-    spinner.style.display = 'flex';
-}
-
-function hideLoadingSpinner() {
-    const spinner = document.getElementById('loadingSpinner');
-    if (spinner) {
-        spinner.style.display = 'none';
-    }
-}
-
-// ========================================
-// 5. 카테고리 필터링
-// ========================================
-function filterByCategory(category) {
-    currentCategory = category;
-    currentPage = 1;
-    hasMore = true;
-
-    // 서버에서 필터링된 데이터 가져오기
-    window.location.href = `/?category=${encodeURIComponent(category)}`;
-}
-
-// ========================================
-// 6. 검색 기능
-// ========================================
-function handleSearch(event, formElement) {
-    event.preventDefault();
-
-    const keyword = formElement.querySelector('input[name="keyword"]').value.trim();
-    const type = formElement.querySelector('select[name="type"]').value;
-
-    if (!keyword) {
-        alert('검색어를 입력하세요.');
-        return;
-    }
-
-    // 검색 실행
-    window.location.href = `/search?keyword=${encodeURIComponent(keyword)}&type=${encodeURIComponent(type)}`;
-}
-
-// ========================================
-// 7. 이미지 지연 로딩 (Lazy Loading)
-// ========================================
+/** ========================================
+ * 3. Lazy Loading
+ * ======================================== */
 function initLazyLoading() {
-    const images = document.querySelectorAll('img[data-src]');
+    const images = document.querySelectorAll("img[data-src]");
+    if (images.length === 0) return;
 
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
+    if ("IntersectionObserver" in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
                     img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
+                    img.removeAttribute("data-src");
                     imageObserver.unobserve(img);
                 }
             });
         });
 
-        images.forEach(img => imageObserver.observe(img));
+        images.forEach((img) => imageObserver.observe(img));
     } else {
-        // Fallback for browsers that don't support IntersectionObserver
-        images.forEach(img => {
+        images.forEach((img) => {
             img.src = img.dataset.src;
-            img.removeAttribute('data-src');
+            img.removeAttribute("data-src");
         });
     }
 }
 
-// ========================================
-// 8. 카테고리 스크롤 (모바일)
-// ========================================
-function initCategoryScroll() {
-    const container = document.querySelector('.category-container');
-    if (!container) return;
-
-    // 활성 카테고리로 자동 스크롤
-    const activeItem = container.querySelector('.category-item.active');
-    if (activeItem) {
-        const containerWidth = container.offsetWidth;
-        const itemOffset = activeItem.offsetLeft;
-        const itemWidth = activeItem.offsetWidth;
-
-        // 활성 아이템을 중앙에 배치
-        container.scrollLeft = itemOffset - (containerWidth / 2) + (itemWidth / 2);
-    }
+/** ========================================
+ * 4. (레거시) URL 이동 방식 카테고리
+ * ======================================== */
+function filterByCategory(category) {
+    currentCategory = category;
+    window.location.href = `/?category=${encodeURIComponent(category)}`;
 }
 
-// ========================================
-// 9. Smooth Scroll to Top
-// ========================================
-function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
+/** ========================================
+ * ✅ HOME 전용 로직
+ * ======================================== */
+(function initHomeModule() {
+    if (!isHomePage()) return;
 
-// 로고 클릭 시 맨 위로 스크롤
-document.addEventListener('DOMContentLoaded', function() {
-    const logo = document.querySelector('.logo');
-    if (logo) {
-        logo.addEventListener('click', scrollToTop);
-    }
-});
+    const grid = document.getElementById("masonryGrid");
+    if (!grid) return;
 
-// ========================================
-// 10. 폼 검증
-// ========================================
-function validateSearchForm(form) {
-    const keyword = form.querySelector('input[name="keyword"]').value.trim();
+    const params = new URLSearchParams(location.search);
+    const hasKeyword = params.has("keyword") && (params.get("keyword") || "").trim() !== "";
 
-    if (!keyword) {
-        alert('검색어를 입력하세요.');
-        return false;
+    const IS_SEARCH_MODE =
+        (typeof window.__IS_SEARCH_PAGE__ === "boolean" && window.__IS_SEARCH_PAGE__ === true) ||
+        hasKeyword;
+
+    if (IS_SEARCH_MODE) {
+        try {
+            sessionStorage.removeItem("homeScrollState:v1");
+        } catch (e) {}
+        return;
     }
 
-    if (keyword.length < 2) {
-        alert('검색어는 2글자 이상 입력하세요.');
-        return false;
+    let homeCurrentPage = 0;
+    let homeIsLoading = false;
+    let homeHasMore =
+        typeof window.__HOME_HAS_NEXT__ === "boolean" ? window.__HOME_HAS_NEXT__ : true;
+
+    let activeCategory = params.get("category") || "전체";
+    const pageSize =
+        typeof window.__HOME_PAGE_SIZE__ === "number" ? window.__HOME_PAGE_SIZE__ : 12;
+
+    const HOME_STATE_KEY = "homeScrollState:v1";
+
+    function saveHomeState(extra = {}) {
+        try {
+            const state = {
+                scrollY: window.scrollY || 0,
+                currentPage: homeCurrentPage,
+                hasMore: homeHasMore,
+                activeCategory,
+                pageSize,
+                ts: Date.now(),
+                ...extra,
+            };
+            sessionStorage.setItem(HOME_STATE_KEY, JSON.stringify(state));
+        } catch (e) {}
     }
 
-    return true;
-}
-
-// ========================================
-// 11. 초기화
-// ========================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('나의 영감 저장소 - 페이지 로드 완료');
-
-    // Masonry 레이아웃 초기화
-    initMasonryLayout();
-
-    // Lazy Loading 초기화
-    initLazyLoading();
-
-    // 카테고리 스크롤 초기화
-    initCategoryScroll();
-
-    // 무한 스크롤 초기화 (선택사항)
-    // initInfiniteScroll();
-
-    // 검색 폼 이벤트 리스너
-    // const searchForms = document.querySforms);
-    const searchForms = document.querySelectorAll('form');
-    searchForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!validateSearchForm(form)) {
-                e.preventDefault();
-            }
-        });
-    });
-
-    // 이미지 로드 에러 처리
-    const images = document.querySelectorAll('.post-image img');
-    images.forEach(img => {
-        img.addEventListener('error', function() {
-            this.src = 'https://via.placeholder.com/400x600?text=No+Image';
-            this.alt = 'Image not found';
-        });
-    });
-
-    // 뒤로가기/앞으로가기 시 스크롤 위치 복원
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-
-    // 페이지 언로드 시 스크롤 위치 저장
-    window.addEventListener('beforeunload', function() {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-    });
-
-    // 페이지 로드 시 스크롤 위치 복원
-    const savedScrollPosition = sessionStorage.getItem('scrollPosition');
-    if (savedScrollPosition) {
-        window.scrollTo(0, parseInt(savedScrollPosition));
-        sessionStorage.removeItem('scrollPosition');
-    }
-});
-
-// ========================================
-// 12. 윈도우 리사이즈 처리
-// ========================================
-let resizeTimeout;
-window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(function() {
-        // 리사이즈 완료 후 레이아웃 재계산
-        initMasonryLayout();
-    }, 250);
-});
-
-// ========================================
-// 13. 성능 최적화
-// ========================================
-// Debounce 함수
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    }
-}
-
-// Throttle 함수
-function throttle(func, limit) {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
+    function loadHomeState() {
+        try {
+            const raw = sessionStorage.getItem(HOME_STATE_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
         }
-    };
-}
-
-// ========================================
-// 14. 유틸리티 함수
-// ========================================
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 7) {
-        return date.toLocaleDateString('ko-KR');
-    } else if (days > 0) {
-        return `${days}일 전`;
-    } else if (hours > 0) {
-        return `${hours}시간 전`;
-    } else if (minutes > 0) {
-        return `${minutes}분 전`;
-    } else {
-        return '방금 전';
     }
-}
 
-function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-}
-
-// ========================================
-// 15. 접근성 개선
-// ========================================
-// 키보드 네비게이션
-document.addEventListener('keydown', function(e) {
-    // Tab 키로 포커스 이동 시 outline 표시
-    if (e.key === 'Tab') {
-        document.body.classList.add('keyboard-navigation');
+    function clearHomeState() {
+        try {
+            sessionStorage.removeItem(HOME_STATE_KEY);
+        } catch (e) {}
     }
-});
 
-document.addEventListener('mousedown', function() {
-    document.body.classList.remove('keyboard-navigation');
-});
-
-// ========================================
-// 16. 에러 처리
-// ========================================
-window.addEventListener('error', function(e) {
-    console.error('JavaScript Error:', e.error);
-    // 에러 로깅 서비스로 전송 (선택사항)
-});
-
-window.addEventListener('unhandledrejection', function(e) {
-    console.error('Unhandled Promise Rejection:', e.reason);
-    // 에러 로깅 서비스로 전송 (선택사항)
-});
-
-// ========================================
-// 17. Export (모듈 사용 시)
-// ========================================
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        openSearchModalLegacy,
-        closeSearchModalLegacy,
-        filterByCategory,
-        initMasonryLayout,
-        scrollToTop
+    window.navigateToCreate = function navigateToCreate() {
+        window.location.href = "/posts/create";
     };
-}
+
+    window.setActiveCategory = async function setActiveCategory(category) {
+        activeCategory = category;
+
+        document.querySelectorAll(".category-btn").forEach((btn) => {
+            btn.classList.remove("bg-[#D4C4B0]", "text-white");
+            btn.classList.add("bg-[#F9F6F1]", "text-[#8B7355]", "hover:bg-[#F0EBE3]");
+        });
+
+        const selectedBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.remove("bg-[#F9F6F1]", "text-[#8B7355]", "hover:bg-[#F0EBE3]");
+            selectedBtn.classList.add("bg-[#D4C4B0]", "text-white");
+        }
+
+        homeCurrentPage = 0;
+        homeHasMore = true;
+
+        saveHomeState();
+        await loadPostsByCategory(category);
+    };
+
+    async function apiGetPosts(paramsObj) {
+        if (window.axios && typeof window.axios.get === "function") {
+            const res = await window.axios.get("/api/posts", { params: paramsObj });
+            return res.data;
+        }
+
+        const query = new URLSearchParams();
+        Object.entries(paramsObj).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== "") query.append(k, v);
+        });
+
+        const res = await fetch(`/api/posts?${query.toString()}`);
+        if (!res.ok) throw new Error("Failed to load posts");
+        return await res.json();
+    }
+
+    function renderEmptyStateWithCta() {
+        grid.innerHTML = `
+      <div class="col-span-full text-center py-24">
+        <p class="text-2xl font-semibold text-[#5A4D41]" style="font-family:'Playfair Display', serif;">
+          아직 작성된 게시글이 없어요
+        </p>
+        <p class="mt-3 text-[#8B7355]" style="font-family:'Noto Sans KR', sans-serif;">
+          오른쪽 아래 <b>+</b> 버튼을 눌러 첫 기록을 남겨보세요!
+        </p>
+        <div class="mt-8">
+          <a href="/posts/create"
+             class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#D4C4B0] text-white hover:bg-[#C9B5A0] transition"
+             style="font-family:'Noto Sans KR', sans-serif;">
+            <span class="text-xl">＋</span>
+            <span class="font-medium">게시글 작성</span>
+          </a>
+        </div>
+      </div>
+    `;
+    }
+
+    function renderPosts(posts) {
+        if (!posts || posts.length === 0) {
+            renderEmptyStateWithCta();
+            return;
+        }
+
+        grid.innerHTML = posts
+            .filter((p) => p && p.id != null)
+            .map((p) => {
+                const title = escapeHtml(p.title || "");
+                const imageUrl =
+                    p.imageUrl && String(p.imageUrl).trim() ? p.imageUrl : "https://picsum.photos/400/600";
+
+                return `
+          <a href="/posts/${p.id}"
+             class="home-card group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
+            <img src="${imageUrl}"
+                 alt="${title}"
+                 class="home-card-img w-full bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
+                 style="display:block;"
+                 onerror="this.onerror=null;this.src='https://picsum.photos/400/600';" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-4">
+                <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
+                  ${title}
+                </h3>
+              </div>
+            </div>
+          </a>
+        `;
+            })
+            .join("");
+    }
+
+    function appendPosts(posts) {
+        const html = (posts || [])
+            .filter((p) => p && p.id != null)
+            .map((p) => {
+                const title = escapeHtml(p.title || "");
+                const imageUrl =
+                    p.imageUrl && String(p.imageUrl).trim() ? p.imageUrl : "https://picsum.photos/400/600";
+
+                return `
+          <a href="/posts/${p.id}"
+             class="home-card group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl bg-[#F9F6F1] block">
+            <img src="${imageUrl}"
+                 alt="${title}"
+                 class="home-card-img w-full bg-[#F9F6F1] transition-transform duration-700 group-hover:scale-105"
+                 style="display:block;"
+                 onerror="this.onerror=null;this.src='https://picsum.photos/400/600';" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-4">
+                <h3 class="text-white" style="font-family:'Noto Sans KR', sans-serif; font-weight:600;">
+                  ${title}
+                </h3>
+              </div>
+            </div>
+          </a>
+        `;
+            })
+            .join("");
+
+        grid.insertAdjacentHTML("beforeend", html);
+    }
+
+    async function loadPostsByCategory(category) {
+        showLoadingSpinner();
+        try {
+            const page = await apiGetPosts({
+                page: 0,
+                size: pageSize,
+                category: category !== "전체" ? category : null,
+            });
+
+            const posts = page.content || [];
+            renderPosts(posts);
+
+            homeHasMore = !page.last;
+            homeCurrentPage = page.number || 0;
+
+            saveHomeState();
+        } catch (e) {
+            console.error("게시물 로드 오류:", e);
+        } finally {
+            hideLoadingSpinner();
+        }
+    }
+
+    async function loadMorePosts() {
+        if (homeIsLoading || !homeHasMore) return;
+
+        homeIsLoading = true;
+        showLoadingSpinner();
+
+        try {
+            const page = await apiGetPosts({
+                page: homeCurrentPage + 1,
+                size: pageSize,
+                category: activeCategory !== "전체" ? activeCategory : null,
+            });
+
+            const posts = page.content || [];
+            if (!posts || posts.length === 0) {
+                homeHasMore = false;
+                saveHomeState();
+                return;
+            }
+
+            homeCurrentPage = page.number;
+            homeHasMore = !page.last;
+            appendPosts(posts);
+
+            saveHomeState();
+        } catch (e) {
+            console.error("추가 게시물 로드 오류:", e);
+            homeHasMore = false;
+            saveHomeState();
+        } finally {
+            homeIsLoading = false;
+            hideLoadingSpinner();
+        }
+    }
+
+    async function restoreHomeIfNeeded() {
+        const state = loadHomeState();
+        if (!state) return;
+
+        if (state.ts && Date.now() - state.ts > 2 * 60 * 60 * 1000) {
+            clearHomeState();
+            return;
+        }
+
+        if (state.activeCategory) activeCategory = state.activeCategory;
+
+        document.querySelectorAll(".category-btn").forEach((btn) => {
+            btn.classList.remove("bg-[#D4C4B0]", "text-white");
+            btn.classList.add("bg-[#F9F6F1]", "text-[#8B7355]", "hover:bg-[#F0EBE3]");
+        });
+        const selectedBtn = document.querySelector(`.category-btn[data-category="${activeCategory}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.remove("bg-[#F9F6F1]", "text-[#8B7355]", "hover:bg-[#F0EBE3]");
+            selectedBtn.classList.add("bg-[#D4C4B0]", "text-white");
+        }
+
+        const targetPage = Number(state.currentPage);
+        if (!Number.isFinite(targetPage) || targetPage < 0) {
+            requestAnimationFrame(() => window.scrollTo(0, state.scrollY || 0));
+            return;
+        }
+
+        try {
+            homeIsLoading = true;
+            for (let p = 0; p <= targetPage; p++) {
+                const page = await apiGetPosts({
+                    page: p,
+                    size: pageSize,
+                    category: activeCategory !== "전체" ? activeCategory : null,
+                });
+
+                const posts = page.content || [];
+                if (p === 0) renderPosts(posts);
+                else appendPosts(posts);
+
+                homeCurrentPage = page.number || p;
+                homeHasMore = !page.last;
+            }
+        } catch (e) {
+            console.warn("restoreHomeIfNeeded load failed:", e);
+        } finally {
+            homeIsLoading = false;
+        }
+
+        requestAnimationFrame(() => window.scrollTo(0, state.scrollY || 0));
+    }
+
+    document.addEventListener("click", (e) => {
+        const a = e.target.closest("a");
+        if (!a) return;
+        const href = a.getAttribute("href") || "";
+        if (href.startsWith("/posts/")) saveHomeState();
+    });
+
+    let __saveT = null;
+    window.addEventListener("scroll", function () {
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const threshold = document.body.offsetHeight - 500;
+
+        if (scrollPosition >= threshold) loadMorePosts();
+
+        if (__saveT) return;
+        __saveT = setTimeout(() => {
+            saveHomeState();
+            __saveT = null;
+        }, 250);
+    });
+
+    window.addEventListener("pageshow", () => restoreHomeIfNeeded());
+    document.addEventListener("DOMContentLoaded", () => restoreHomeIfNeeded());
+})();
+
+/** ========================================
+ * 초기화
+ * ======================================== */
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("나의 영감 저장소 - 페이지 로드 완료");
+    initLazyLoading();
+});
+
+/** 전역 에러 로깅 */
+window.addEventListener("error", function (e) {
+    console.error("JavaScript Error:", e.error);
+});
+window.addEventListener("unhandledrejection", function (e) {
+    console.error("Unhandled Promise Rejection:", e.reason);
+});

@@ -155,11 +155,6 @@ body {
     color: var(--color-brown-light);
 }
 
-.search-input:focus {
-    ring: 2px;
-    ring-color: var(--color-brown-hover);
-}
-
 .search-btn {
     padding: 0.75rem 1.5rem;
     background-color: var(--color-primary);
@@ -269,12 +264,12 @@ body {
     gap: 0.75rem;
     overflow-x: auto;
     scroll-behavior: smooth;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .category-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
 }
 
 .category-item {
@@ -328,7 +323,6 @@ body {
     margin: 0 auto;
 }
 
-/* U-shaped curve (SVG 대신 CSS로 구현) */
 .intro-section::after {
     content: '';
     position: absolute;
@@ -341,113 +335,12 @@ body {
 }
 
 /* ========================================
-   5. Main Content & Masonry Grid
+   5. Main Content (공용)
 ======================================== */
 .main-content {
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 3rem 1.5rem;
-}
-
-.masonry-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-    width: 100%;
-}
-
-.masonry-item {
-    break-inside: avoid;
-    page-break-inside: avoid;
-}
-
-.post-card {
-    display: block;
-    background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    transition: all var(--transition-slow);
-    text-decoration: none;
-    color: inherit;
-    box-shadow: var(--shadow-sm);
-}
-
-.post-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-}
-
-.post-image {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-}
-
-.post-image img {
-    width: 100%;
-    height: auto;
-    display: block;
-    transition: transform var(--transition-slow);
-}
-
-.post-card:hover .post-image img {
-    transform: scale(1.05);
-}
-
-.post-info {
-    padding: 1.25rem;
-}
-
-.post-title {
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-brown);
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-}
-
-.post-description {
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    color: var(--color-brown-light);
-    margin-bottom: 0.75rem;
-    line-height: 1.6;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.post-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-    color: var(--color-brown-light);
-}
-
-.post-category {
-    padding: 0.25rem 0.75rem;
-    background-color: var(--color-bg-primary);
-    border-radius: var(--radius-full);
-    font-weight: 500;
-}
-
-.post-author {
-    font-weight: 500;
-}
-
-/* No Data */
-.no-data {
-    text-align: center;
-    padding: 4rem 1.5rem;
-}
-
-.no-data p {
-    font-family: var(--font-sans);
-    font-size: 1.125rem;
-    color: var(--color-brown-light);
+    padding: 0;
 }
 
 /* ========================================
@@ -478,7 +371,6 @@ body {
     transform: scale(1.1);
 }
 
-/* Tooltip for floating button */
 .floating-add-btn::before {
     content: '글쓰기';
     position: absolute;
@@ -599,14 +491,13 @@ body {
 }
 
 /* ========================================
-   8. Responsive Design
+   8. Responsive Design (공용)
 ======================================== */
 @media (max-width: 768px) {
     :root {
         --header-height: 65px;
     }
 
-    /* Header */
     .logo {
         font-size: 1.25rem;
     }
@@ -633,13 +524,11 @@ body {
         font-size: 0.75rem;
     }
 
-    /* Category */
     .category-item {
         font-size: 0.75rem;
         padding: 0.5rem 1rem;
     }
 
-    /* Intro Section */
     .intro-container h2 {
         font-size: 1.5rem;
     }
@@ -648,17 +537,10 @@ body {
         font-size: 1rem;
     }
 
-    /* Masonry Grid */
-    .masonry-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 0.75rem;
-    }
-
     .main-content {
-        padding: 2rem 1rem;
+        padding: 0;
     }
 
-    /* Floating Button */
     .floating-add-btn {
         width: 60px;
         height: 60px;
@@ -668,42 +550,12 @@ body {
     }
 }
 
-@media (min-width: 640px) {
-    .masonry-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .masonry-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    }
-}
-
-@media (min-width: 1280px) {
-    .masonry-grid {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    }
-}
-
-@media (min-width: 1536px) {
-    .masonry-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-}
-
 /* ========================================
    9. Utility Classes
 ======================================== */
-.desktop-only {
-    display: block;
-}
+.desktop-only { display: block; }
+.mobile-only  { display: none; }
 
-.mobile-only {
-    display: none;
-}
-
-/* Loading Spinner */
 .loading {
     display: flex;
     justify-content: center;
@@ -721,17 +573,9 @@ body {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
-/* Smooth scroll */
-html {
-    scroll-behavior: smooth;
-}
-
-/* Focus styles for accessibility */
 *:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -747,18 +591,11 @@ html {
     .search-modal {
         display: none;
     }
-
-    .post-card {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
 }
 
 /* ========================================
    Comments (Post View) - Actions UI
 ======================================== */
-
-/* ✅ 여기(위 블록)에 sticky를 추가한 것 */
 .comments-sticky-wrapper {
     position: sticky;
     top: calc(var(--header-height) + 24px);
@@ -803,15 +640,13 @@ html {
 }
 
 .comment-actions {
-    margin-left: auto;              /* ✅ 오른쪽 정렬 */
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.inline-form {
-    display: inline;
-}
+.inline-form { display: inline; }
 
 .icon-btn {
     border: none;
@@ -830,11 +665,8 @@ html {
     background-color: var(--color-bg-secondary);
 }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 
-/* Edit box */
 .comment-edit-box {
     margin-top: 0.75rem;
     background: var(--color-bg-secondary);
@@ -877,23 +709,11 @@ html {
     font-weight: 600;
 }
 
-.btn-edit-save {
-    background: var(--color-primary);
-    color: #fff;
-}
+.btn-edit-save { background: var(--color-primary); color: #fff; }
+.btn-edit-save:hover { background: var(--color-brown-hover); }
 
-.btn-edit-save:hover {
-    background: var(--color-brown-hover);
-}
-
-.btn-edit-cancel {
-    background: var(--color-border);
-    color: var(--color-brown);
-}
-
-.btn-edit-cancel:hover {
-    background: var(--color-bg-tertiary);
-}
+.btn-edit-cancel { background: var(--color-border); color: var(--color-brown); }
+.btn-edit-cancel:hover { background: var(--color-bg-tertiary); }
 
 .comment-pagination{
     display:flex;
@@ -915,9 +735,7 @@ html {
     transition: background-color var(--transition-base);
 }
 
-.btn-page:hover{
-    background: var(--color-bg-tertiary);
-}
+.btn-page:hover{ background: var(--color-bg-tertiary); }
 
 .page-info{
     font-size: 0.85rem;
@@ -925,13 +743,11 @@ html {
     font-weight: 700;
 }
 
-/* 페이지 번호 버튼 */
 .page-number {
     min-width: 34px;
     text-align: center;
 }
 
-/* 현재 페이지 */
 .page-number.active {
     background-color: var(--color-primary);
     color: #fff;
@@ -940,149 +756,58 @@ html {
 }
 
 /* ========================================
-   [VIEW] Swiper (Post Images) - single slider (정리본)
-   ✅ 상세페이지 이미지 "안 잘리게" = contain
-======================================== */
-
-/* 혹시 다른 곳에서 post-images에 overflow를 걸어도 슬라이더는 살아야 함 */
-.post-images { overflow: visible !important; }
-
-.postImagesSwiper {
-    width: 100%;
-    max-width: 920px;
-    margin: 0 auto;
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--color-bg-secondary);
-    height: 520px;              /* PC 높이 */
-}
-
-@media (max-width: 768px) {
-    .postImagesSwiper { height: 320px; }   /* 모바일 높이 */
-}
-
-/* 슬라이드 내부 정렬 + 배경으로 여백 자연스럽게 */
-.postImagesSwiper .swiper-slide {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-bg-secondary);
-}
-
-/* ✅ 핵심: cover -> contain (잘림 방지) */
-.postImagesSwiper img.post-image,
-.postImagesSwiper img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain !important;
-    display: block;
-    background: var(--color-bg-secondary);
-}
-
-/* ✅ 첫 슬라이드(스티커 캔버스)도 같은 규칙을 따르게 */
-#sticker-canvas {
-    width: 100%;
-    height: 100%;
-    background: var(--color-bg-secondary);
-}
-
-#sticker-canvas img.post-image,
-#sticker-canvas img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain !important;
-    display: block;
-    background: var(--color-bg-secondary);
-}
-
-/* 버튼 색(안 보일 때 대비) */
-.postImagesSwiper .swiper-button-prev,
-.postImagesSwiper .swiper-button-next {
-    color: #fff;
-}
-
-/* 페이지네이션 위치 살짝 */
-.postImagesSwiper .swiper-pagination {
-    bottom: 10px !important;
-}
-
-/* ========================================
-   [HOME 카드] (기존 마지막 규칙 범위 축소)
-   - 상세 Swiper에 영향 주지 않게 "카드 이미지"에만 적용
-======================================== */
-.post-card .post-image img{
-    width: 100%;
-    height: 220px;      /* 원하는 높이 */
-    object-fit: cover;
-    display: block;
-}
-
-
-
-
-/* ========================================
    스티커 기능 관련 스타일
 ======================================== */
-
-/* ✅ 1. 카테고리 탭 슬라이드 스타일 */
 #sticker-category-tabs {
     display: flex;
     gap: 8px;
-    overflow-x: auto; /* 가로 스크롤 활성화 */
-    white-space: nowrap; /* 버튼들이 한 줄로 나열되도록 고정 */
-    padding: 4px 0 10px 0; /* 아래쪽 여백을 주어 탭이 답답해 보이지 않게 함 */
-    -ms-overflow-style: none; /* IE, Edge 스크롤바 숨기기 */
-    scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
-    scroll-behavior: smooth; /* 탭 클릭 시 부드러운 이동 */
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 4px 0 10px 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
 }
 
-/* 크롬, 사파리 스크롤바 숨기기 */
-#sticker-category-tabs::-webkit-scrollbar {
-    display: none;
-}
+#sticker-category-tabs::-webkit-scrollbar { display: none; }
 
-/* ✅ 2. 카테고리 버튼 (반응형 대응) */
 .category-btn {
-    flex: 0 0 auto; /* 슬라이드 유지를 위해 크기 고정 */
-    padding: 7px 15px; /* 조금 더 여유 있는 패딩 */
-    font-size: 13px; /* 가독성을 위해 살짝 키움 */
+    flex: 0 0 auto;
+    padding: 7px 15px;
+    font-size: 13px;
     font-weight: 600;
-    border-radius: 999px; /* 완전한 라운드 형태 */
+    border-radius: 999px;
     background: #ffffff;
     color: #8B7355;
     border: 1px solid #E8D5C4;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* 미세한 그림자로 입체감 부여 */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* 활성화된 탭 스타일 */
 .category-btn.active {
     background: #8B7355;
     color: #ffffff;
     border-color: #8B7355;
-    transform: translateY(-1px); /* 활성화 시 살짝 올라오는 효과 */
+    transform: translateY(-1px);
 }
 
-/* ✅ 3. 반응형 스티커 팔레트 (그리드 최적화) */
-/* ✅ 브라우저 너비에 따라 그리드 컬럼을 직접 제어하는 가장 확실한 방법 */
 #sticker-palette {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important; /* 모바일 기본 3열 */
+    grid-template-columns: repeat(3, 1fr) !important;
 }
 
-@media (min-width: 640px) {  #sticker-palette { grid-template-columns: repeat(4, 1fr) !important; } }
-@media (min-width: 768px) { #sticker-palette { grid-template-columns: repeat(6, 1fr) !important; } }
+@media (min-width: 640px)  { #sticker-palette { grid-template-columns: repeat(4, 1fr) !important; } }
+@media (min-width: 768px)  { #sticker-palette { grid-template-columns: repeat(6, 1fr) !important; } }
 @media (min-width: 1024px) { #sticker-palette { grid-template-columns: repeat(8, 1fr) !important; } }
 @media (min-width: 1280px) { #sticker-palette { grid-template-columns: repeat(10, 1fr) !important; } }
 @media (min-width: 1536px) { #sticker-palette { grid-template-columns: repeat(12, 1fr) !important; } }
 
-/* 개별 스티커 아이템 */
 .palette-item {
     display: flex;
     justify-content: center;
     align-items: center;
-    aspect-ratio: 1 / 1; /* ✅ 가로세로 1:1 비율 고정 */
+    aspect-ratio: 1 / 1;
     padding: 10px;
     background: #FDFBFA;
     border: 1px solid #F5EDE5;
@@ -1093,18 +818,16 @@ html {
 
 .palette-item:hover {
     background: #F9F6F1;
-    transform: scale(1.1); /* 마우스 올렸을 때 살짝 강조 */
+    transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
 }
 
-/* 이미지 영역 위의 스티커 이미지 고정 사이즈 */
 .sticker-item img.sticker-img {
     object-contain: contain;
     pointer-events: none;
     background: transparent !important;
 }
 
-/* 스티커 아이템 컨테이너 */
 .sticker-item {
     position: absolute !important;
     display: flex !important;
@@ -1112,21 +835,18 @@ html {
     justify-content: center;
 }
 
-/* 삭제 버튼이 선택되지 않았을 때는 확실히 숨김 */
 .sticker-item .btn-single-remove.hidden,
 .sticker-item .sticker-control-panel.hidden {
     display: none !important;
 }
 
-/* 스티커 메인 이미지 고정 스타일 */
 .sticker-main-img {
     display: block;
-    pointer-events: none; /* 이미지가 클릭을 방해하지 않게 함 */
+    pointer-events: none;
     background: transparent !important;
     object-fit: contain;
 }
 
-/* 개별 삭제 버튼 (빨간 X) */
 .btn-single-remove {
     position: absolute !important;
     top: -10px !important;
@@ -1137,7 +857,7 @@ html {
     color: white !important;
     border: 2px solid white !important;
     border-radius: 50% !important;
-    z-index: 99999 !important; /* 최상단 보장 */
+    z-index: 99999 !important;
     cursor: pointer !important;
     display: flex !important;
     align-items: center;
@@ -1146,7 +866,6 @@ html {
     font-weight: bold !important;
 }
 
-/* 스크롤바 숨기기 유틸리티 */
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -1155,79 +874,42 @@ html {
     display: none;
 }
 
-/* 스티커 팔레트 스크롤바 커스텀 */
-#sticker-palette {
-    max-height: 400px; /* 원하는 높이로 조절 */
-    overflow-y: auto;
-    padding-right: 8px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 한 줄에 4개씩 */
-    gap: 10px;
+/* ========================================
+   ✅ [HOME] Masonry (메인 전용 / 상세 영향 X)
+   - column-count 고정 대신 column-width 기반 → "배치 바꾸기 전" 카드 폭 느낌 유지
+======================================== */
+.page-home #masonryGrid{
+    column-width: 340px;      /* ✅ 카드 가로 폭 기준(예전 4열 느낌) */
+    column-gap: 18px;
+    padding: 18px;
 }
 
-/* 스크롤바 전체 스타일 */
-#sticker-palette::-webkit-scrollbar {
-    width: 6px;
+/* 반응형: 화면 좁아지면 자동으로 컬럼 수 감소 */
+@media (max-width: 1400px){ .page-home #masonryGrid{ column-width: 320px; } }
+@media (max-width: 900px) { .page-home #masonryGrid{ column-width: 300px; } }
+@media (max-width: 520px) { .page-home #masonryGrid{ column-width: 100%; } }
+
+/* ✅ columns 안에서 block이면 가끔 폭이 커지는 경우가 있어서 inline-block을 강제 */
+.page-home #masonryGrid > a.home-card{
+    display: inline-block !important;   /* ✅ Tailwind block 덮어쓰기(홈에서만) */
+    width: 100% !important;
+    margin: 0 0 18px;
+
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transform: translateZ(0);
 }
 
-/* 스크롤바 트랙(바탕) */
-#sticker-palette::-webkit-scrollbar-track {
-    background: #fdf2f8; /* 아주 연한 핑크색 */
-    border-radius: 10px;
+/* ✅ 이미지 크기: "배치 바꾸기 전(320px)" 느낌 유지 + 살짝만 가변 */
+.page-home #masonryGrid > a.home-card img.home-card-img{
+    width: 100% !important;
+    height: clamp(280px, 32vw, 360px);  /* ✅ 예전 320px 기반으로 적당히 커졌다/작아짐 */
+    object-fit: contain;                /* ✅ 예전처럼 안 잘림 */
+    background: #F9F6F1;
+    display: block;
 }
-
-/* 스크롤바 핸들(움직이는 부분) */
-#sticker-palette::-webkit-scrollbar-thumb {
-    background: #fbcfe8; /* 핑크색 */
-    border-radius: 10px;
-}
-
-/* 스크롤바 핸들 호버 시 */
-#sticker-palette::-webkit-scrollbar-thumb:hover {
-    background: #f9a8d4;
-}
-
-/* 조작 버튼 스타일 공통 */
-.ctrl-btn {
-    width: 32px;
-    height: 32px;
-    background-color: #fdf2f8; /* 연핑크 */
-    border-radius: 9999px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-    border: none;
-    cursor: pointer;
-}
-.ctrl-btn:hover { background-color: #fbcfe8; }
-.c-reset { background-color: #f3f4f6; } /* 초기화 버튼만 그레이 */
-
-/* 팔레트 스크롤바 UI */
-#sticker-palette {
-    max-height: 380px;
-    overflow-y: scroll !important;
-    scrollbar-width: thin;
-    scrollbar-color: #fbcfe8 #fdf2f8;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
-
-#sticker-palette::-webkit-scrollbar { width: 6px; }
-#sticker-palette::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
-#sticker-palette::-webkit-scrollbar-track { background: #fdf2f8; }
-
-/* 조작 버튼 디자인 */
-.c-btn {
-    width: 34px; height: 34px;
-    background-color: #fdf2f8;
-    border: none; border-radius: 999px;
-    cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-    transition: all 0.2s;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.c-btn:hover { background-color: #fbcfe8; transform: scale(1.1); }

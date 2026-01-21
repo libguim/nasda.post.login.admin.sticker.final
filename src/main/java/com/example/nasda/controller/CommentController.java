@@ -4,6 +4,8 @@ import com.example.nasda.domain.CommentEntity;
 import com.example.nasda.domain.UserEntity;
 import com.example.nasda.domain.UserRepository;
 import com.example.nasda.dto.comment.CommentCreateRequestDto;
+import com.example.nasda.dto.comment.CommentPageResponse;
+import com.example.nasda.dto.comment.CommentViewDto;
 import com.example.nasda.repository.CommentRepository;
 import com.example.nasda.service.CommentService;
 import jakarta.validation.Valid;
@@ -15,8 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,7 +28,7 @@ public class CommentController {
 
     private final CommentService commentService;
     private final UserRepository userRepository;
-    private final CommentRepository commentRepository; // 👈 1. 이 줄을 꼭 추가하세요!
+    private final CommentRepository commentRepository;
 
     // =========================
     // 로그인 사용자 정보
@@ -50,20 +54,56 @@ public class CommentController {
     }
 
     // =========================
-    // ✅ 추가: 내 댓글 목록 조회 (페이징)
+    // ✅ AJAX 댓글 페이징 API
+    // =========================
+    @GetMapping("/api/posts/{postId}/comments")
+    @ResponseBody
+    public CommentPageResponse getCommentsApi(
+            @PathVariable Integer postId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        Integer currentUserId = getCurrentUserIdOrNull();
+
+        Page<CommentViewDto> commentPage = commentService.getCommentsPage(postId, page, size, currentUserId);
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy년 M월 d일");
+
+        List<CommentPageResponse.CommentItem> items =
+                commentPage.getContent().stream()
+                        .map(c -> new CommentPageResponse.CommentItem(
+                                c.id(),
+                                c.content(),
+                                c.authorNickname(),
+                                c.createdAt() == null ? "" : c.createdAt().format(fmt),
+                                c.canEdit()
+                        ))
+                        .toList();
+
+        CommentPageResponse.PageInfo pageInfo = new CommentPageResponse.PageInfo(
+                commentPage.getNumber(),
+                commentPage.getSize(),
+                commentPage.getTotalPages(),
+                commentPage.getTotalElements(),
+                commentPage.hasPrevious(),
+                commentPage.hasNext()
+        );
+
+        return new CommentPageResponse(items, pageInfo);
+    }
+
+    // =========================
+    // ✅ 내 댓글 목록 조회(기존 유지)
     // =========================
     @GetMapping("/comments/my")
     public String myComments(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            Model model
+            org.springframework.ui.Model model
     ) {
         Integer currentUserId = getCurrentUserIdOrNull();
         if (currentUserId == null) return "redirect:/user/login";
 
-        // 한 페이지에 10개씩, 최신순(createdAt DESC) 정렬
         Pageable pageable = PageRequest.of(page, 10, Sort.by("createdAt").descending());
-
-        // 서비스에서 Page<CommentEntity> 형태로 가져옴
         Page<CommentEntity> commentPage = commentService.findByUserId(currentUserId, pageable);
 
         model.addAttribute("comments", commentPage.getContent());
@@ -74,9 +114,8 @@ public class CommentController {
     }
 
     // =========================
-    // 댓글 작성/삭제/수정
+    // 댓글 작성/삭제/수정 (기존 redirect 유지)
     // =========================
-
     @PostMapping("/comments")
     public String create(
             @Valid @ModelAttribute CommentCreateRequestDto req,
@@ -104,9 +143,10 @@ public class CommentController {
 
         Integer postId = commentService.deleteComment(commentId, currentUserId);
 
+        // ✅ 기존처럼 0으로 고정하지 말고 현재 page/size 유지
         return "redirect:/posts/" + postId
-                + "?page=0"
-                + "&size=5"
+                + "?page=" + page
+                + "&size=" + size
                 + "#comments";
     }
 
@@ -127,6 +167,8 @@ public class CommentController {
                 + "&size=" + size
                 + "#comments";
     }
+
+    // (기존 goToComment 유지해도 됨)
     @GetMapping("/comments/{id}/go")
     public String goToComment(@PathVariable("id") Integer commentId) {
         CommentEntity comment = commentRepository.findById(commentId)
@@ -137,10 +179,6 @@ public class CommentController {
 
         int page = commentService.getPageNumberByCommentId(postId, commentId, pageSize);
 
-        // 💡 인텔리제이 콘솔창에 숫자가 몇이 찍히는지 확인해보세요!
-        System.out.println("디버깅 - 댓글ID: " + commentId + ", 계산된 페이지: " + page);
-
         return "redirect:/posts/" + postId + "?page=" + page + "#comment-" + commentId;
     }
-
 }

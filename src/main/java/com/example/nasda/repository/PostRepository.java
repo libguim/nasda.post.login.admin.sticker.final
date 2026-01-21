@@ -7,12 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import com.example.nasda.domain.PostImageEntity;
 
 import java.util.List;
 
-
-@Repository
 public interface PostRepository extends JpaRepository<PostEntity, Integer> {
 
     long countByUser_UserId(Integer userId);
@@ -55,10 +53,18 @@ public interface PostRepository extends JpaRepository<PostEntity, Integer> {
     Page<PostEntity> findByUser_UserId(Integer userId, Pageable pageable);
 
     @Modifying
-    @Query(value = "DELETE FROM post_images WHERE post_id IN (SELECT post_id FROM posts WHERE category_id = :categoryId)", nativeQuery = true)
+    @Query("delete from PostImageEntity pi where pi.post.category.categoryId = :categoryId")
     void deletePostImagesByCategoryId(@Param("categoryId") Integer categoryId);
 
     @Modifying
     @Query("delete from PostEntity p where p.category.categoryId = :categoryId")
     void deleteByCategoryId(@Param("categoryId") Integer categoryId);
+
+    @Query("""
+    select p from PostEntity p
+    where lower(p.title) like lower(concat('%', :keyword, '%'))
+       or lower(p.description) like lower(concat('%', :keyword, '%'))
+    order by p.createdAt desc
+""")
+    List<PostEntity> searchTitleOrDescription(@Param("keyword") String keyword);
 }

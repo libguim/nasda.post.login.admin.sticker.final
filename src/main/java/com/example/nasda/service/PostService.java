@@ -1,10 +1,6 @@
 package com.example.nasda.service;
 
-import com.example.nasda.domain.CategoryEntity;
-import com.example.nasda.domain.PostEntity;
-import com.example.nasda.domain.PostImageEntity;
-import com.example.nasda.domain.UserEntity;
-import com.example.nasda.domain.UserRepository;
+import com.example.nasda.domain.*;
 import com.example.nasda.dto.post.HomePostDto;
 import com.example.nasda.dto.post.PostViewDto;
 import com.example.nasda.repository.CategoryRepository;
@@ -202,7 +198,7 @@ public class PostService {
             case "title" -> postRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(q);
             case "author" -> postRepository.findByUser_NicknameContainingIgnoreCaseOrderByCreatedAtDesc(q);
             case "category" -> postRepository.findByCategory_CategoryNameContainingIgnoreCaseOrderByCreatedAtDesc(q);
-            default -> postRepository.findByDescriptionContainingIgnoreCaseOrderByCreatedAtDesc(q);
+            default -> postRepository.searchTitleOrDescription(q); // ✅ content
         };
 
         return results.stream()
