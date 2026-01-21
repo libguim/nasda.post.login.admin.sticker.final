@@ -844,7 +844,6 @@ body {
     display: block;
     pointer-events: none;
     background: transparent !important;
-    object-fit: contain;
 }
 
 .btn-single-remove {
@@ -875,36 +874,33 @@ body {
 }
 
 /* ========================================
-   ✅ [HOME] Masonry (메인 전용 / 상세 영향 X)
-   - column-count 고정 대신 column-width 기반 → "배치 바꾸기 전" 카드 폭 느낌 유지
+   ✅ [HOME] Masonry (핀터레스트 느낌)
+   - 가로 폭 고정(컬럼 폭) + 세로는 이미지 비율대로 자동
 ======================================== */
 .page-home #masonryGrid{
-    column-width: 340px;      /* ✅ 카드 가로 폭 기준(예전 4열 느낌) */
+    column-width: 340px;
     column-gap: 18px;
     padding: 18px;
 }
 
-/* 반응형: 화면 좁아지면 자동으로 컬럼 수 감소 */
 @media (max-width: 1400px){ .page-home #masonryGrid{ column-width: 320px; } }
 @media (max-width: 900px) { .page-home #masonryGrid{ column-width: 300px; } }
-/* ✅ 모바일도 2열 유지해서 '한 장이 화면 꽉' 방지 */
+
+/* 모바일: 2열 유지 */
 @media (max-width: 520px){
     .page-home #masonryGrid{
         column-count: 2;
-        column-width: auto; /* column-width 100% 무효화 */
+        column-width: auto;
         column-gap: 12px;
         padding: 12px;
     }
 }
-
-/* 너무 작은 폰만 1열 */
 @media (max-width: 360px){
     .page-home #masonryGrid{ column-count: 1; }
 }
 
-/* ✅ columns 안에서 block이면 가끔 폭이 커지는 경우가 있어서 inline-block을 강제 */
 .page-home #masonryGrid > a.home-card{
-    display: inline-block !important;   /* ✅ Tailwind block 덮어쓰기(홈에서만) */
+    display: inline-block !important;
     width: 100% !important;
     margin: 0 0 18px;
 
@@ -915,14 +911,15 @@ body {
     border-radius: 18px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    transform: translateZ(0);
+    background: #F9F6F1;
 }
 
-/* ✅ 이미지 크기: "배치 바꾸기 전(320px)" 느낌 유지 + 살짝만 가변 */
+/* ✅ 핵심: 세로 고정 제거 → 이미지 비율대로 높이 자동 */
 .page-home #masonryGrid > a.home-card img.home-card-img{
     width: 100% !important;
-    height: clamp(280px, 32vw, 360px);  /* ✅ 예전 320px 기반으로 적당히 커졌다/작아짐 */
-    object-fit: contain;                /* ✅ 예전처럼 안 잘림 */
+    height: auto !important;      /* ✅ 가변 높이 */
+    display: block !important;
     background: #F9F6F1;
-    display: block;
+    /* object-fit 제거 (height auto면 의미 없어짐) */
 }
+
