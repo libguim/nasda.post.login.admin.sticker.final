@@ -1,15 +1,14 @@
-// /static/js/comment.js
+// =========================
+// static/js/comment.js
+// (최종 합본 - 전체 코드)
+// =========================
 (() => {
     "use strict";
 
     const DEFAULT_PAGE_SIZE = 5;
 
-    function qs(sel, root = document) {
-        return root.querySelector(sel);
-    }
-    function qsa(sel, root = document) {
-        return Array.from(root.querySelectorAll(sel));
-    }
+    function qs(sel, root = document) { return root.querySelector(sel); }
+    function qsa(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
     function getPostId() {
         const form = qs("#comment-form");
@@ -43,23 +42,9 @@
         };
     }
 
-    function getTotalPagesFromDOM() {
-        // pagination이 없으면 totalPages=1로 봄
-        const pag = qs(".comment-pagination");
-        if (!pag) return 1;
-
-        const pageBtns = qsa(".comment-pagination .page-number", pag);
-        if (pageBtns.length === 0) return 1;
-
-        // page-number 버튼들은 0..totalPages-1을 모두 렌더링하므로 길이가 totalPages
-        return pageBtns.length;
-    }
-
     function getCommentCountOnPageFromDOM() {
         const list = qs("#comments-list");
         if (!list) return 0;
-
-        // "아직 댓글이 없어요" 같은 안내 div가 있으면 실제 댓글 0
         const items = qsa(".comment-item", list);
         return items.length;
     }
@@ -79,6 +64,7 @@
         });
 
         const text = await res.text();
+
         if (!res.ok) {
             console.error("Request failed:", res.status, text);
             throw new Error(`Request failed: ${res.status}`);
@@ -105,38 +91,14 @@
 
         // pagination 교체/제거/추가
         if (curPagination) {
-            if (newPagination) {
-                curPagination.outerHTML = newPagination.outerHTML;
-            } else {
-                curPagination.remove();
-            }
+            if (newPagination) curPagination.outerHTML = newPagination.outerHTML;
+            else curPagination.remove();
         } else {
             const wrapper = qs(".comments-sticky-wrapper");
-            if (wrapper && newPagination) {
-                wrapper.insertAdjacentHTML("beforeend", newPagination.outerHTML);
-            }
+            if (wrapper && newPagination) wrapper.insertAdjacentHTML("beforeend", newPagination.outerHTML);
         }
 
-        if (curCount && newCount) {
-            curCount.textContent = newCount.textContent;
-        }
-    }
-
-    // ✅ 비어있는 페이지면 이전 페이지로 자동 이동
-    async function ensureNonEmptyPage(page, size) {
-        // 현재 페이지가 0이거나, 댓글이 있으면 그대로
-        const count = getCommentCountOnPageFromDOM();
-        if (count > 0) return { page, size };
-
-        // 댓글 0이고 page > 0이면 이전으로
-        if (page > 0) {
-            const prevPage = page - 1;
-            await loadCommentsPage(prevPage, size, { keepScroll: true, autoFixEmpty: false });
-            return { page: prevPage, size };
-        }
-
-        // page=0인데 비어있으면 그냥 유지(진짜 댓글이 없는 케이스)
-        return { page, size };
+        if (curCount && newCount) curCount.textContent = newCount.textContent;
     }
 
     async function loadCommentsPage(page, size, { keepScroll = true, autoFixEmpty = true } = {}) {
@@ -145,12 +107,15 @@
 
         const url = `/posts/${postId}?page=${page}&size=${size}#comments`;
         const html = await fetchHtml(url);
-
         extractAndReplaceComments(html);
 
+        // ✅ 비어있는 페이지면 이전 페이지로 자동 이동
         if (autoFixEmpty) {
-            // 로드 후 비어있으면(삭제 등으로 인해) 자동 이전 페이지로
-            await ensureNonEmptyPage(page, size);
+            const count = getCommentCountOnPageFromDOM();
+            if (count === 0 && page > 0) {
+                await loadCommentsPage(page - 1, size, { keepScroll: true, autoFixEmpty: false });
+                return;
+            }
         }
 
         if (keepScroll) scrollToComments();
@@ -164,7 +129,6 @@
         view.classList.add("hidden");
         box.classList.remove("hidden");
 
-        // textarea value를 현재 텍스트로 동기화
         const originText = qs(".comment-text", commentItemEl)?.textContent ?? "";
         const ta = qs(".comment-edit-textarea", commentItemEl);
         if (ta) ta.value = originText;
@@ -186,7 +150,6 @@
         counter.textContent = `${ta.value.length}/500`;
     }
 
-    // ✅ create/edit/delete 후 어디를 로드할지 정책
     async function afterMutationReload({ type }) {
         const { page, size } = getCurrentPageAndSizeFromDOM();
 
@@ -229,7 +192,7 @@
         if (pageBtn) {
             e.preventDefault();
             const page = parseInt(pageBtn.dataset.page ?? "0", 10);
-            const size = parseInt(pageBtn.dataset.size ?? `${DEFAULT_PAGE_SIZE}`, 10);
+            const size = parseInt(pageBtn.dataset.size ?? String(DEFAULT_PAGE_SIZE), 10);
 
             try {
                 await loadCommentsPage(page, size, { keepScroll: true, autoFixEmpty: false });
@@ -260,55 +223,51 @@
     });
 
     // submit 캡처링으로 가로채기
-    document.addEventListener(
-        "submit",
-        async (e) => {
-            const form = e.target;
+    document.addEventListener("submit", async (e) => {
+        const form = e.target;
 
-            // 댓글 작성
-            if (form && form.id === "comment-form") {
+        // 댓글 작성
+        if (form && form.id === "comment-form") {
+            e.preventDefault();
+            try {
+                await postFormViaFetch(form, { type: "create" });
+            } catch (err) {
+                console.error(err);
+                alert("댓글 등록에 실패했습니다.");
+            }
+            return;
+        }
+
+        // 댓글 삭제
+        if (form && form.matches("form.inline-form")) {
+            const ok = confirm("댓글을 삭제할까요?");
+            if (!ok) {
                 e.preventDefault();
-                try {
-                    await postFormViaFetch(form, { type: "create" });
-                } catch (err) {
-                    console.error(err);
-                    alert("댓글 등록에 실패했습니다.");
-                }
                 return;
             }
+            e.preventDefault();
 
-            // 댓글 삭제
-            if (form && form.matches("form.inline-form")) {
-                const ok = confirm("댓글을 삭제할까요?");
-                if (!ok) {
-                    e.preventDefault();
-                    return;
-                }
-
-                e.preventDefault();
-                try {
-                    await postFormViaFetch(form, { type: "delete" });
-                } catch (err) {
-                    console.error(err);
-                    alert("댓글 삭제에 실패했습니다.");
-                }
-                return;
+            try {
+                await postFormViaFetch(form, { type: "delete" });
+            } catch (err) {
+                console.error(err);
+                alert("댓글 삭제에 실패했습니다.");
             }
+            return;
+        }
 
-            // 댓글 수정 저장
-            if (form && form.closest(".comment-edit-box")) {
-                e.preventDefault();
-                try {
-                    await postFormViaFetch(form, { type: "edit" });
-                } catch (err) {
-                    console.error(err);
-                    alert("댓글 수정에 실패했습니다.");
-                }
-                return;
+        // 댓글 수정 저장
+        if (form && form.closest(".comment-edit-box")) {
+            e.preventDefault();
+            try {
+                await postFormViaFetch(form, { type: "edit" });
+            } catch (err) {
+                console.error(err);
+                alert("댓글 수정에 실패했습니다.");
             }
-        },
-        true
-    );
+            return;
+        }
+    }, true);
 
     document.addEventListener("input", (e) => {
         if (e.target && e.target.id === "comment-content") updateCharCount();

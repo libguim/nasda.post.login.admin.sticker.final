@@ -62,6 +62,7 @@ public class PostController {
 
             // 1. 로그인 유저 및 본인 확인 로직 (작성자가 null일 경우 대비)
             Integer currentUserId = authUserService.getCurrentUserIdOrNull();
+            model.addAttribute("currentUserId", currentUserId);
             boolean isOwner = currentUserId != null
                     && entity.getUser() != null
                     && currentUserId.equals(entity.getUser().getUserId());

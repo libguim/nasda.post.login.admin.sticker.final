@@ -31,10 +31,9 @@ public class CommentService {
                 .map(e -> new CommentViewDto(
                         e.getCommentId(),
                         e.getContent(),
-                        // ✅ 유저 테이블 조인 전: user_id를 닉네임처럼 표시
                         "사용자" + e.getUserId(),
                         e.getCreatedAt(),
-                        e.getUserId().equals(currentUserId)
+                        currentUserId != null && e.getUserId().equals(currentUserId)
                 ));
     }
 

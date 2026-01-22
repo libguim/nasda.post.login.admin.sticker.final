@@ -1,29 +1,118 @@
+<!-- =========================
+  templates/posts/view.html
+  (최종 합본 - 전체 코드)
+========================= -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <th:block th:replace="~{layout/header :: head}"></th:block>
+
+    <!-- Swiper -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" />
     <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body class="min-h-screen bg-white">
 
+    <!-- ✅ 상세 이미지: "안 짤림(contain)" + "옆 슬라이드 비침 차단" + "높이 자동 안정화" -->
+    <style>
+        /* ========== POST VIEW Swiper: 옆 이미지 비침 차단 ========== */
+        .post-images {
+            margin-top: 18px;
+            overflow: hidden; /* ✅ 옆 슬라이드 비침 차단 */
+        }
+
+        /* Swiper 자체 박스 */
+        .postImagesSwiper {
+            width: 100%;
+            max-width: 920px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden; /* ✅ 핵심 */
+            background: var(--color-bg-secondary);
+        }
+
+        .postImagesSwiper .swiper-slide {
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--color-bg-secondary);
+        }
+
+        /* 실제 이미지+스티커가 올라가는 박스가 높이를 담당 */
+        .post-media-box {
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--color-bg-secondary);
+            position: relative;
+            /* ✅ 반응형 높이: 너무 크지도 작지도 않게 */
+            height: clamp(260px, 62vh, 640px);
+        }
+
+        .post-media-box img.post-image {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain !important; /* ✅ 안 짤림 */
+            background: var(--color-bg-secondary);
+        }
+
+        /* 스티커 레이어 */
+        .post-media-box .sticker-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Swiper UI */
+        .postImagesSwiper .swiper-button-prev,
+        .postImagesSwiper .swiper-button-next {
+            color: rgba(90, 77, 65, 0.7);
+        }
+
+        .postImagesSwiper .swiper-pagination {
+            bottom: 10px !important;
+        }
+
+        .postImagesSwiper .swiper-pagination-bullet {
+            background: rgba(90, 77, 65, 0.45);
+            opacity: 1;
+        }
+
+        .postImagesSwiper .swiper-pagination-bullet-active {
+            background: rgba(90, 77, 65, 0.85);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-white">
+<!-- 공용 헤더 -->
 <div th:replace="~{layout/header :: header}"></div>
+<div th:replace="~{layout/header :: searchModal}"></div>
+<th:block th:replace="~{layout/header :: commonScript}"></th:block>
+
+<!-- postId data -->
 <div data-post-id="" th:data-post-id="${post.id}"></div>
 
 <main class="view-container">
     <div class="view-header">
         <button onclick="window.location.href='/'" class="btn-back-inline">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
             목록으로
         </button>
+
+        <!-- ✅ 게시글 신고 버튼 (좌측 상단) -->
+        <button type="button" class="btn-post-report" th:attr="data-post-id=${post.id}">
+            ⚠️ 게시글 신고
+        </button>
     </div>
 
     <div class="post-layout-grid">
-
         <article class="post-detail">
             <div class="post-detail-header">
                 <div>
@@ -41,19 +130,18 @@
                             </svg>
                         </div>
                         <div>
-                            <span th:text="${authorNickname}">알 수 없음</span>
-
-                            <span th:text="${authorNickname != null ? authorNickname : '알 수 없음'}"></span>                            <span class="post-date"
-                                  th:text="${#temporals.format(post.createdAt, 'yyyy.MM.dd HH:mm')}">2024.01.01</span>
+                            <span class="author-name" th:text="${post.author.nickname}">작성자</span>
+                            <span class="post-date" th:text="${#temporals.format(post.createdAt, 'yyyy.MM.dd HH:mm')}">
+                  2024.01.01
+                </span>
                         </div>
                     </div>
 
-                    <!-- ✅ 게시글 수정/삭제: 우리가 만든 URL로만 연결 -->
+                    <!-- ✅ 게시글 수정/삭제: 동료 코드 유지 -->
                     <div th:if="${post.isOwner}" class="post-actions">
                         <a th:href="@{/posts/edit/{id}(id=${post.id})}" class="btn-action btn-edit">수정</a>
                         <form th:action="@{/posts/{id}/delete(id=${post.id})}" method="post" style="display:inline;">
-                            <button type="submit"
-                                    class="btn-action btn-delete"
+                            <button type="submit" class="btn-action btn-delete"
                                     onclick="return confirm('정말 삭제하시겠습니까?');">
                                 삭제
                             </button>
@@ -62,65 +150,17 @@
                 </div>
             </div>
 
-            <!-- ✅ 게시글 이미지 (첫 이미지부터 넘기는 Swiper 1개로) -->
-            <!-- ✅ 게시글 이미지 (기존 코드)-->
-            <!--            <div th:if="${post.imageItems != null and !post.imageItems.isEmpty()}" class="post-images">-->
-
-            <!--                <div class="swiper postImagesSwiper">-->
-            <!--                    <div class="swiper-wrapper">-->
-
-            <!--                        <th:block th:each="image, iter : ${post.imageItems}">-->
-
-            <!--                            &lt;!&ndash; ✅ 1번째: 꾸미기 캔버스 &ndash;&gt;-->
-            <!--                            <div class="swiper-slide" th:if="${iter.first}">-->
-            <!--                                <div id="sticker-canvas"-->
-            <!--                                     class="sticker-canvas relative rounded-2xl overflow-hidden bg-[#F9F6F1]"-->
-            <!--                                     th:data-image-id="${image.id}">-->
-
-            <!--                                    <img th:src="@{${image.url}}"-->
-            <!--                                         th:alt="${post.title}"-->
-            <!--                                         class="post-image select-none w-full h-full block">-->
-
-            <!--                                    <div id="sticker-layer"-->
-            <!--                                         class="absolute inset-0 pointer-events-none overflow-hidden"></div>-->
-            <!--                                </div>-->
-            <!--                            </div>-->
-
-            <!--                            &lt;!&ndash; ✅ 2번째~ 일반 이미지 &ndash;&gt;-->
-            <!--                            <div class="swiper-slide" th:unless="${iter.first}">-->
-            <!--                                <img th:src="@{${image.url}}"-->
-            <!--                                     th:alt="${post.title}"-->
-            <!--                                     class="post-image w-full h-full block"-->
-            <!--                                     th:data-image-id="${image.id}">-->
-            <!--                            </div>-->
-
-            <!--                        </th:block>-->
-
-
-            <!--                    </div>-->
-
-            <!--                    <div class="swiper-pagination"></div>-->
-            <!--                    <div class="swiper-button-prev"></div>-->
-            <!--                    <div class="swiper-button-next"></div>-->
-            <!--                </div>-->
-
-            <!--            </div>-->
-
+            <!-- ✅ 이미지 + 스티커 레이어 -->
             <div th:if="${post.imageItems != null and !post.imageItems.isEmpty()}" class="post-images">
                 <div class="swiper postImagesSwiper">
                     <div class="swiper-wrapper">
                         <th:block th:each="image : ${post.imageItems}">
                             <div class="swiper-slide">
-                                <div class="sticker-canvas relative rounded-2xl overflow-hidden bg-[#F9F6F1] aspect-square"
-                                     th:data-image-id="${image.id}">
-
+                                <div class="sticker-canvas post-media-box" th:data-image-id="${image.id}">
                                     <img th:src="@{${image.url}}"
                                          th:alt="${post.title}"
-                                         class="post-image select-none w-full h-full object-cover block">
-
-                                    <div class="sticker-layer absolute inset-0 z-10 pointer-events-none overflow-hidden"
-                                         th:data-image-id="${image.id}">
-                                    </div>
+                                         class="post-image select-none">
+                                    <div class="sticker-layer" th:data-image-id="${image.id}"></div>
                                 </div>
                             </div>
                         </th:block>
@@ -132,46 +172,14 @@
                 </div>
             </div>
 
-
             <div class="post-content">
                 <p th:text="${post.content}" style="white-space: pre-wrap;">게시물 내용</p>
             </div>
         </article>
 
-        <aside class="comments-section">
+        <!-- ✅ 댓글 섹션 -->
+        <aside class="comments-section" id="comments">
             <div class="comments-sticky-wrapper">
-
-                <!-- ===== 꾸미기 패널 (기존 유지) ===== -->
-                <!--                <div class="decoration-panel mb-8 p-6 bg-[#F9F6F1] rounded-2xl">-->
-                <!--                    <div class="flex items-center gap-2 mb-4">-->
-                <!--                        <span class="text-xl">✨</span>-->
-                <!--                        <h3 class="text-[#8B7355] font-serif text-lg font-bold">꾸미기</h3>-->
-                <!--                    </div>-->
-
-                <!--                    <div id="deco-start-view">-->
-                <!--                        <button onclick="startDecoration()"-->
-                <!--                                class="w-full py-3 bg-[#D4C4B0] text-white rounded-xl hover:bg-[#C9B5A0] transition-all font-medium cursor-pointer">-->
-                <!--                            꾸미기 시작-->
-                <!--                        </button>-->
-                <!--                    </div>-->
-
-                <!--                    <div id="deco-active-view" class="hidden space-y-4">-->
-                <!--                        <p class="text-xs text-[#8B7355]">스티커를 드래그하여 이미지에 놓아보세요!</p>-->
-
-                <!--                        <div class="grid grid-cols-5 gap-2 bg-white p-3 rounded-xl" id="sticker-palette"></div>-->
-
-                <!--                        <div class="flex gap-2">-->
-                <!--                            <button onclick="saveDecoration()"-->
-                <!--                                    class="flex-1 py-2 bg-[#8B7355] text-white rounded-lg hover:bg-[#A89080] text-sm cursor-pointer">-->
-                <!--                                저장-->
-                <!--                            </button>-->
-                <!--                            <button onclick="cancelDecoration()"-->
-                <!--                                    class="flex-1 py-2 bg-[#E8D5C4] text-[#8B7355] rounded-lg hover:bg-[#D4C4B0] text-sm cursor-pointer">-->
-                <!--                                취소-->
-                <!--                            </button>-->
-                <!--                        </div>-->
-                <!--                    </div>-->
-                <!--                </div>-->
 
                 <!-- ===== 스티커 붙이기 패널 ===== -->
                 <div class="decoration-panel mb-8 p-6 bg-[#F9F6F1] rounded-2xl">
@@ -193,32 +201,27 @@
                                 <span class="animate-pulse">💡</span> 스티커를 이미지 위로 드래그하세요!
                             </p>
 
-                            <div id="sticker-category-tabs" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-[#E8D5C4]">
-                            </div>
+                            <div id="sticker-category-tabs"
+                                 class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-[#E8D5C4]"></div>
 
-                            <div id="sticker-palette" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3 bg-white p-4 rounded-2xl min-h-[160px] max-h-[300px] overflow-y-auto border border-[#E8D5C4] shadow-inner scrollbar-hide">
-                            </div>
+                            <div id="sticker-palette"
+                                 class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3 bg-white p-4 rounded-2xl min-h-[160px] max-h-[300px] overflow-y-auto border border-[#E8D5C4] shadow-inner scrollbar-hide"></div>
                         </div>
 
-                        <!--                        <div class="flex gap-2 pt-2">-->
-                        <!--                            <button onclick="saveDecoration()"-->
-                        <!--                                    class="flex-1 py-3 bg-[#8B7355] text-white rounded-xl hover:bg-[#766248] text-sm font-bold shadow-sm transition-all active:scale-95">-->
-                        <!--                                ✨ 저장하기-->
-                        <!--                            </button>-->
-                        <!--                            <button onclick="cancelDecoration()"-->
-                        <!--                                    class="flex-1 py-3 bg-[#E8D5C4] text-[#8B7355] rounded-lg hover:bg-[#D4C4B0] text-sm font-bold transition-all">-->
-                        <!--                                취소-->
-                        <!--                            </button>-->
-                        <!--                        </div>-->
                         <div class="flex flex-col gap-2 pt-2">
                             <button onclick="clearAllStickers()"
                                     class="w-full py-2 bg-red-50 text-red-500 rounded-lg text-xs font-bold hover:bg-red-100 transition-all border border-red-100">
                                 🗑️ 스티커 모두 지우기
                             </button>
-
                             <div class="flex gap-2">
-                                <button onclick="saveDecoration()" class="flex-1 py-3 bg-[#8B7355] text-white rounded-xl font-bold shadow-sm">✨ 저장하기</button>
-                                <button onclick="cancelDecoration()" class="flex-1 py-3 bg-[#E8D5C4] text-[#8B7355] rounded-lg font-bold">취소</button>
+                                <button onclick="saveDecoration()"
+                                        class="flex-1 py-3 bg-[#8B7355] text-white rounded-xl font-bold shadow-sm">
+                                    ✨ 저장하기
+                                </button>
+                                <button onclick="cancelDecoration()"
+                                        class="flex-1 py-3 bg-[#E8D5C4] text-[#8B7355] rounded-lg font-bold">
+                                    취소
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -230,24 +233,20 @@
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-
-                    <!-- ✅ FIX: totalComments 대신 commentsPage.totalElements 사용 -->
                     <span id="comment-count-text"
                           th:text="'댓글 ' + ${(commentsPage != null) ? commentsPage.totalElements : 0} + '개'">
-                        댓글 0개
-                    </span>
+              댓글 0개
+            </span>
                 </h2>
 
-                <!-- ✅ 댓글 작성 폼 -->
+                <!-- 댓글 작성 폼 -->
                 <form id="comment-form"
                       class="comment-form"
                       th:data-post-id="${post.id}"
                       th:action="@{/comments}"
                       method="post">
-
                     <input type="hidden" name="postId" th:value="${post.id}">
-                    <textarea id="comment-content"
-                              name="content"
+                    <textarea id="comment-content" name="content"
                               placeholder="따뜻한 댓글을 남겨주세요..."
                               class="comment-textarea"
                               maxlength="500"></textarea>
@@ -258,30 +257,30 @@
                     </div>
                 </form>
 
-                <!-- ✅ 댓글 리스트 -->
+                <!-- 댓글 리스트 -->
                 <div id="comments-list" class="comments-list">
                     <div th:if="${comments == null or #lists.isEmpty(comments)}" class="no-comments">
                         아직 댓글이 없어요. 첫 댓글을 남겨보세요!
                     </div>
 
-                    <div th:each="comment : ${comments}">
-                        <span th:text="${post.nickname != null ? post.nickname : '알 수 없음'}">알 수 없음</span>                        <p th:text="${comment.content}">댓글 내용</p>
-                    </div>
+                    <div class="comment-item"
+                         th:each="c : ${comments}"
+                         th:attr="data-comment-id=${c.id}"
+                         th:id="'comment-' + ${c.id}">
                         <div class="comment-card">
                             <div class="comment-content-view">
                                 <p class="comment-text" th:text="${c.content}">댓글 내용</p>
 
                                 <div class="comment-bottom-row">
                                     <div class="comment-left-meta">
-                                        <div class="comment-author"
-                                             th:text="${post.user != null ? post.user.nickname : '알 수 없음'}">
-                                            작성자 닉네임
-                                        </div>                                        <span class="comment-date"
-                                              th:text="${#temporals.format(c.createdAt, 'yyyy년 M월 d일')}">2026년 1월 12일</span>
+                                        <span class="comment-author" th:text="${c.authorNickname}">작성자</span>
+                                        <span class="comment-date"
+                                              th:text="${#temporals.format(c.createdAt, 'yyyy년 M월 d일')}">
+                        2026년 1월 12일
+                      </span>
                                     </div>
 
                                     <div class="comment-actions">
-                                        <!-- 수정 -->
                                         <button type="button"
                                                 class="icon-btn btn-comment-edit"
                                                 title="수정"
@@ -289,124 +288,109 @@
                                             ✏️
                                         </button>
 
-                                        <!-- 삭제 -->
                                         <form th:if="${c.canEdit}"
                                               th:action="@{/comments/{id}/delete(id=${c.id})}"
                                               method="post"
                                               class="inline-form">
-
-                                            <!-- ✅ 현재 페이지 유지용 -->
                                             <input type="hidden" name="page" th:value="${commentsPage != null ? commentsPage.number : 0}">
                                             <input type="hidden" name="size" th:value="${commentsPage != null ? commentsPage.size : 5}">
-
-                                            <button type="submit"
-                                                    class="icon-btn btn-comment-delete"
-                                                    title="삭제">
-                                                🗑️
-                                            </button>
+                                            <button type="submit" class="icon-btn btn-comment-delete" title="삭제">🗑️</button>
                                         </form>
 
-
-                                        <!-- 신고 -->
-                                        <button type="button"
-                                                class="icon-btn btn-comment-report"
-                                                title="신고">
-                                            ⚠️
-                                        </button>
+                                        <button type="button" class="icon-btn btn-comment-report" title="신고">⚠️</button>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ✅ 수정 모드 -->
                             <div class="comment-edit-box hidden">
                                 <form th:action="@{/comments/{id}/edit(id=${c.id})}" method="post">
-
-                                    <!-- ✅ 현재 페이지 유지용 -->
                                     <input type="hidden" name="page" th:value="${commentsPage != null ? commentsPage.number : 0}">
                                     <input type="hidden" name="size" th:value="${commentsPage != null ? commentsPage.size : 5}">
-
-                                    <textarea class="comment-edit-textarea"
-                                              name="content"
+                                    <textarea class="comment-edit-textarea" name="content"
                                               maxlength="500"
                                               th:text="${c.content}"></textarea>
-
                                     <div class="comment-edit-actions">
                                         <button type="submit" class="btn-edit-save">저장</button>
                                         <button type="button" class="btn-edit-cancel">취소</button>
                                     </div>
                                 </form>
                             </div>
+
                         </div>
                     </div>
                 </div>
 
-                <!-- ✅ 댓글 페이징 (0-based: commentsPage 기준으로 렌더링) -->
+                <!-- 댓글 페이징 -->
                 <div class="comment-pagination"
-                     th:if="${commentsPage != null and commentsPage.totalPages > 1}">
-
-                    <!-- 이전 -->
-                    <a class="btn-page"
-                       th:if="${commentsPage.hasPrevious()}"
-                       th:href="@{/posts/{id}(id=${post.id}, page=${commentsPage.number - 1}, size=${commentsPage.size})}">
+                     th:if="${commentsPage != null and commentsPage.totalPages > 1}"
+                     th:attr="data-post-id=${post.id}">
+                    <button type="button" class="btn-page"
+                            th:if="${commentsPage.hasPrevious()}"
+                            th:attr="data-page=${commentsPage.number - 1}, data-size=${commentsPage.size}">
                         이전
-                    </a>
+                    </button>
 
-                    <!-- 페이지 번호 -->
                     <th:block th:each="p : ${#numbers.sequence(0, commentsPage.totalPages - 1)}">
-                        <a class="btn-page page-number"
-                           th:classappend="${commentsPage.number == p} ? ' active' : ''"
-                           th:href="@{/posts/{id}(id=${post.id}, page=${p}, size=${commentsPage.size})}"
-                           th:text="${p + 1}">
+                        <button type="button"
+                                class="btn-page page-number"
+                                th:classappend="${commentsPage.number == p} ? ' active' : ''"
+                                th:attr="data-page=${p}, data-size=${commentsPage.size}"
+                                th:text="${p + 1}">
                             1
-                        </a>
+                        </button>
                     </th:block>
 
-                    <!-- 다음 -->
-                    <a class="btn-page"
-                       th:if="${commentsPage.hasNext()}"
-                       th:href="@{/posts/{id}(id=${post.id}, page=${commentsPage.number + 1}, size=${commentsPage.size})}">
+                    <button type="button" class="btn-page"
+                            th:if="${commentsPage.hasNext()}"
+                            th:attr="data-page=${commentsPage.number + 1}, data-size=${commentsPage.size}">
                         다음
-                    </a>
+                    </button>
                 </div>
-        </aside>
+
             </div>
         </aside>
-
     </div>
 </main>
 
+<!-- scripts -->
 <script th:src="@{/js/main.js}"></script>
 <script th:src="@{/js/comment.js}"></script>
 <script th:src="@{/js/post.js}"></script>
+
+<!-- Axios (혹시 header에서 안 로드될 경우 대비) -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- page inline data -->
 <script th:inline="javascript">
     /*<![CDATA[*/
-    // sticker.js에서 window.ST_DATA.currentUserId를 참조하므로 형식을 맞춥니다.
     window.ST_DATA = {
         postId: [[${post.id}]],
-        currentUserId: 1 // 혹은 실제 로그인 사용자 ID
+        currentUserId: 1 /* TODO: 실제 로그인 유저ID로 교체 */
     };
-
     window.postId = [[${post.id}]];
     window.currentUserId = 1;
     /*]]>*/
 </script>
+
 <script th:src="@{/js/sticker.js}"></script>
 
+<!-- Swiper -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 <script>
     (function () {
         const root = document.querySelector(".postImagesSwiper");
         if (!root) return;
 
-        new Swiper(root, {
+        const swiper = new Swiper(root, {
             slidesPerView: 1,
-            spaceBetween: 12,
-            touchStartPreventDefault: false, // 이 설정이 false여야 내부 요소 클릭이 잘 됩니다.
-            preventClicks: false,            // 클릭 차단 방지
-            preventClicksPropagation: false,  // 클릭 전파 차단 방지
-            observer: true,                // DOM 변화 감지
-            observeParents: true,          // 부모 요소 변화 감지
+            spaceBetween: 0,
+            centeredSlides: false,
+            watchOverflow: true,
+            touchStartPreventDefault: false,
+            preventClicks: false,
+            preventClicksPropagation: false,
+            observer: true,
+            observeParents: true,
             pagination: {
                 el: root.querySelector(".swiper-pagination"),
                 clickable: true,
@@ -415,6 +399,12 @@
                 nextEl: root.querySelector(".swiper-button-next"),
                 prevEl: root.querySelector(".swiper-button-prev"),
             },
+        });
+
+        // ✅ 이미지 로드 후 레이아웃 한번 더 안정화
+        root.querySelectorAll("img").forEach(img => {
+            if (img.complete) return;
+            img.addEventListener("load", () => swiper.update(), { once: true });
         });
     })();
 </script>
