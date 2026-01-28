@@ -1,0 +1,240 @@
+/* ========================================
+   스티커 기능 관련 스타일
+======================================== */
+
+/* ✅ 1. 카테고리 탭 슬라이드 스타일 */
+#sticker-category-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto; /* 가로 스크롤 활성화 */
+    white-space: nowrap; /* 버튼들이 한 줄로 나열되도록 고정 */
+    padding: 4px 0 10px 0; /* 아래쪽 여백을 주어 탭이 답답해 보이지 않게 함 */
+    -ms-overflow-style: none; /* IE, Edge 스크롤바 숨기기 */
+    scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
+    scroll-behavior: smooth; /* 탭 클릭 시 부드러운 이동 */
+}
+
+/* 크롬, 사파리 스크롤바 숨기기 */
+#sticker-category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* ✅ 2. 카테고리 버튼 (반응형 대응) */
+.category-btn {
+    flex: 0 0 auto; /* 슬라이드 유지를 위해 크기 고정 */
+    padding: 7px 15px; /* 조금 더 여유 있는 패딩 */
+    font-size: 13px; /* 가독성을 위해 살짝 키움 */
+    font-weight: 600;
+    border-radius: 999px; /* 완전한 라운드 형태 */
+    background: #ffffff;
+    color: #8B7355;
+    border: 1px solid #E8D5C4;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* 미세한 그림자로 입체감 부여 */
+}
+
+/* 활성화된 탭 스타일 */
+.category-btn.active {
+    background: #8B7355;
+    color: #ffffff;
+    border-color: #8B7355;
+    transform: translateY(-1px); /* 활성화 시 살짝 올라오는 효과 */
+}
+
+/* ✅ 3. 반응형 스티커 팔레트 (그리드 최적화) */
+/* ✅ 브라우저 너비에 따라 그리드 컬럼을 직접 제어하는 가장 확실한 방법 */
+#sticker-palette {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* 모바일 기본 3열 */
+}
+
+@media (min-width: 640px) {  #sticker-palette { grid-template-columns: repeat(4, 1fr) !important; } }
+@media (min-width: 768px) { #sticker-palette { grid-template-columns: repeat(6, 1fr) !important; } }
+@media (min-width: 1024px) { #sticker-palette { grid-template-columns: repeat(8, 1fr) !important; } }
+@media (min-width: 1280px) { #sticker-palette { grid-template-columns: repeat(10, 1fr) !important; } }
+@media (min-width: 1536px) { #sticker-palette { grid-template-columns: repeat(12, 1fr) !important; } }
+
+/* 개별 스티커 아이템 */
+.palette-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1; /* ✅ 가로세로 1:1 비율 고정 */
+    padding: 10px;
+    background: #FDFBFA;
+    border: 1px solid #F5EDE5;
+    border-radius: 14px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.palette-item:hover {
+    background: #F9F6F1;
+    transform: scale(1.1); /* 마우스 올렸을 때 살짝 강조 */
+    box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
+}
+
+/* 이미지 영역 위의 스티커 이미지 고정 사이즈 */
+.sticker-item img.sticker-img {
+    object-contain: contain;
+    pointer-events: none;
+    background: transparent !important;
+}
+
+/* 스티커 아이템 컨테이너 */
+.sticker-item {
+    position: absolute !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 스티커 아이템 호버 효과 */
+.sticker-item:hover {
+    filter: brightness(1.1);
+    transition: filter 0.2s ease;
+}
+
+/* 커스텀 툴팁을 만들고 싶다면 아래 속성을 참고하세요 */
+.sticker-item::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(139, 115, 85, 0.9); /* 따뜻한 갈색톤 */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10015;
+}
+
+.sticker-item:hover::after {
+    opacity: 1;
+}
+
+/* 삭제 버튼이 선택되지 않았을 때는 확실히 숨김 */
+.sticker-item .btn-single-remove.hidden,
+.sticker-item .sticker-control-panel.hidden {
+    display: none !important;
+}
+
+/* 스티커 메인 이미지 고정 스타일 */
+.sticker-main-img {
+    display: block;
+    pointer-events: none; /* 이미지가 클릭을 방해하지 않게 함 */
+    background: transparent !important;
+    object-fit: contain;
+}
+
+/* 개별 삭제 버튼 (빨간 X) */
+.btn-single-remove {
+    position: absolute !important;
+    top: -10px !important;
+    right: -10px !important;
+    width: 26px !important;
+    height: 26px !important;
+    background-color: #ff4d4f !important;
+    color: white !important;
+    border: 2px solid white !important;
+    border-radius: 50% !important;
+    z-index: 99999 !important; /* 최상단 보장 */
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+
+/* 스크롤바 숨기기 유틸리티 */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* 스티커 팔레트 스크롤바 커스텀 */
+#sticker-palette {
+    max-height: 400px; /* 원하는 높이로 조절 */
+    overflow-y: auto;
+    padding-right: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 한 줄에 4개씩 */
+    gap: 10px;
+}
+
+/* 스크롤바 전체 스타일 */
+#sticker-palette::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* 스크롤바 트랙(바탕) */
+#sticker-palette::-webkit-scrollbar-track {
+    background: #fdf2f8; /* 아주 연한 핑크색 */
+    border-radius: 10px;
+}
+
+/* 스크롤바 핸들(움직이는 부분) */
+#sticker-palette::-webkit-scrollbar-thumb {
+    background: #fbcfe8; /* 핑크색 */
+    border-radius: 10px;
+}
+
+/* 스크롤바 핸들 호버 시 */
+#sticker-palette::-webkit-scrollbar-thumb:hover {
+    background: #f9a8d4;
+}
+
+/* 조작 버튼 스타일 공통 */
+.ctrl-btn {
+    width: 32px;
+    height: 32px;
+    background-color: #fdf2f8; /* 연핑크 */
+    border-radius: 9999px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.ctrl-btn:hover { background-color: #fbcfe8; }
+.c-reset { background-color: #f3f4f6; } /* 초기화 버튼만 그레이 */
+
+/* 팔레트 스크롤바 UI */
+#sticker-palette {
+    max-height: 380px;
+    overflow-y: scroll !important;
+    scrollbar-width: thin;
+    scrollbar-color: #fbcfe8 #fdf2f8;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+#sticker-palette::-webkit-scrollbar { width: 6px; }
+#sticker-palette::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+#sticker-palette::-webkit-scrollbar-track { background: #fdf2f8; }
+
+/* 조작 버튼 디자인 */
+.c-btn {
+    width: 34px; height: 34px;
+    background-color: #fdf2f8;
+    border: none; border-radius: 999px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: all 0.2s;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.c-btn:hover { background-color: #fbcfe8; transform: scale(1.1); }
