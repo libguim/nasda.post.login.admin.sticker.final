@@ -97,21 +97,6 @@
 <div data-post-id="" th:data-post-id="${post.id}"></div>
 
 <main class="view-container">
-    <div class="view-header">
-        <button onclick="window.location.href='/'" class="btn-back-inline">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            목록으로
-        </button>
-
-        <!-- ✅ 게시글 신고 버튼 (좌측 상단) -->
-        <button type="button" class="btn-post-report" th:attr="data-post-id=${post.id}">
-            ⚠️ 게시글 신고
-        </button>
-    </div>
 
     <div class="post-layout-grid">
         <article class="post-detail">
@@ -120,7 +105,33 @@
                     <div class="post-category-badge" th:text="${post.category}">카테고리</div>
                     <h1 class="post-detail-title" th:text="${post.title}">게시물 제목</h1>
                 </div>
+            </div>
 
+            <!-- ✅ 이미지 + 스티커 레이어 -->
+            <div th:if="${post.imageItems != null and !post.imageItems.isEmpty()}" class="post-images">
+                <div class="swiper postImagesSwiper">
+                    <div class="swiper-wrapper">
+                        <th:block th:each="image : ${post.imageItems}">
+                            <div class="swiper-slide">
+                                <div class="sticker-canvas post-media-box" th:data-image-id="${image.id}">
+                                    <img th:src="@{${image.url}}"
+                                         th:alt="${post.title}"
+                                         class="post-image select-none">
+                                    <div class="sticker-layer" th:data-image-id="${image.id}"></div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
+                </div>
+            </div>
+
+            <div class="post-detail-header" style="margin: 1rem 2rem;gap: 1rem;padding-bottom: 1rem;">
+                <div>
+                </div>
                 <div class="post-meta-info">
                     <div class="post-author-info">
                         <div class="author-avatar">
@@ -149,33 +160,29 @@
                         </form>
                     </div>
                 </div>
-            </div>
-
-            <!-- ✅ 이미지 + 스티커 레이어 -->
-            <div th:if="${post.imageItems != null and !post.imageItems.isEmpty()}" class="post-images">
-                <div class="swiper postImagesSwiper">
-                    <div class="swiper-wrapper">
-                        <th:block th:each="image : ${post.imageItems}">
-                            <div class="swiper-slide">
-                                <div class="sticker-canvas post-media-box" th:data-image-id="${image.id}">
-                                    <img th:src="@{${image.url}}"
-                                         th:alt="${post.title}"
-                                         class="post-image select-none">
-                                    <div class="sticker-layer" th:data-image-id="${image.id}"></div>
-                                </div>
-                            </div>
-                        </th:block>
-                    </div>
-
-                    <div class="swiper-pagination"></div>
-                    <div class="swiper-button-prev"></div>
-                    <div class="swiper-button-next"></div>
+                <div class="post-report-area">
+                    <!-- ✅ 게시글 신고 버튼 (좌측 상단) -->
+                    <button type="button" class="btn-post-report" th:attr="data-post-id=${post.id}">
+                        ⚠️ 게시글 신고
+                    </button>
                 </div>
             </div>
 
             <div class="post-content">
                 <p th:text="${post.content}" style="white-space: pre-wrap;">게시물 내용</p>
             </div>
+
+            <div class="view-header">
+                <button onclick="window.location.href='/'" class="btn-back-inline">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    목록으로
+                </button>
+            </div>
+
         </article>
 
         <!-- ✅ 댓글 섹션 -->
@@ -202,8 +209,14 @@
                                 <span class="animate-pulse">💡</span> 스티커를 이미지 위로 드래그하세요!
                             </p>
 
-                            <div id="sticker-category-tabs"
-                                 class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-[#E8D5C4]"></div>
+
+
+                            <div class="relative group">
+                                <button type="button" class="tab-scroll-btn left-0" onclick="document.getElementById('sticker-category-tabs').scrollLeft -= 150">‹</button>
+                                <div id="sticker-category-tabs"
+                                     class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-[#E8D5C4]"></div>
+                                <button type="button" class="tab-scroll-btn right-0" onclick="document.getElementById('sticker-category-tabs').scrollLeft += 150">›</button>
+                            </div>
 
                             <div id="sticker-palette"
                                  class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3 bg-white p-4 rounded-2xl min-h-[160px] max-h-[300px] overflow-y-auto border border-[#E8D5C4] shadow-inner scrollbar-hide"></div>

@@ -8,7 +8,8 @@
     gap: 8px;
     overflow-x: auto; /* 가로 스크롤 활성화 */
     white-space: nowrap; /* 버튼들이 한 줄로 나열되도록 고정 */
-    padding: 4px 0 10px 0; /* 아래쪽 여백을 주어 탭이 답답해 보이지 않게 함 */
+    /*padding: 4px 0 10px 0; !* 아래쪽 여백을 주어 탭이 답답해 보이지 않게 함 *!*/
+    padding: 4px 35px 10px 35px !important;
     -ms-overflow-style: none; /* IE, Edge 스크롤바 숨기기 */
     scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
     scroll-behavior: smooth; /* 탭 클릭 시 부드러운 이동 */
@@ -42,31 +43,88 @@
     transform: translateY(-1px); /* 활성화 시 살짝 올라오는 효과 */
 }
 
-/* ✅ 3. 반응형 스티커 팔레트 (그리드 최적화) */
-/* ✅ 브라우저 너비에 따라 그리드 컬럼을 직접 제어하는 가장 확실한 방법 */
-#sticker-palette {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important; /* 모바일 기본 3열 */
+/* 버튼 기본 스타일 */
+.tab-scroll-btn {
+    position: absolute;
+    top: 8px;
+    width: 28px;
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #E8D5C4;
+    border-radius: 50%;
+    color: #8B7355;
+    z-index: 20;
+    cursor: pointer;
+    display: flex;
+    /*align-items: center;*/
+    align-items: end;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s ease;
 }
 
-@media (min-width: 640px) {  #sticker-palette { grid-template-columns: repeat(4, 1fr) !important; } }
-@media (min-width: 768px) { #sticker-palette { grid-template-columns: repeat(6, 1fr) !important; } }
-@media (min-width: 1024px) { #sticker-palette { grid-template-columns: repeat(8, 1fr) !important; } }
-@media (min-width: 1280px) { #sticker-palette { grid-template-columns: repeat(10, 1fr) !important; } }
-@media (min-width: 1536px) { #sticker-palette { grid-template-columns: repeat(12, 1fr) !important; } }
+/* 마우스를 올렸을 때만 버튼 노출 */
+.group:hover .tab-scroll-btn {
+    opacity: 1;
+}
 
-/* 개별 스티커 아이템 */
+.tab-scroll-btn:hover {
+    background-color: #8B7355;
+    color: white;
+}
+
+/* 3. 호버 시 효과 */
+.tab-scroll-btn:hover {
+    background-color: #8B7355;
+    color: white;
+    border-color: #8B7355;
+}
+
+/* 탭 영역의 부드러운 스크롤 */
+#sticker-category-tabs {
+    scroll-behavior: smooth; /* 버튼 클릭 시 스르륵 이동하게 함 */
+    -ms-overflow-style: none; /* 스크롤바 숨기기 */
+    scrollbar-width: none;
+}
+#sticker-category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* #sticker-palette */
+#sticker-palette {
+    display: grid !important;
+    /* ✅ 핵심: 한 칸의 최소 너비를 50px로 보장하며, 가로 스크롤 없이 화면에 꽉 채움 */
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)) !important;
+    gap: 12px;
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 20px;
+    border: 1px solid #E8D5C4;
+    max-height: 300px;
+    overflow-y: auto;   /* 세로 스크롤 허용 */
+    overflow-x: hidden;  /* ✅ 가로 스크롤 방지 */
+    width: 100%;
+}
+
+/* 개별 스티커 아이템 (기존 코드 유지 및 미세 조정) */
 .palette-item {
     display: flex;
     justify-content: center;
     align-items: center;
-    aspect-ratio: 1 / 1; /* ✅ 가로세로 1:1 비율 고정 */
-    padding: 10px;
+    aspect-ratio: 1 / 1;
+    padding: 8px; /* 내부 여백을 살짝 줄여 스티커를 더 크게 보이게 함 */
     background: #FDFBFA;
     border: 1px solid #F5EDE5;
     border-radius: 14px;
     cursor: grab;
     transition: all 0.2s ease;
+    width: 100%; /* 부모 그리드 칸에 맞춤 */
+}
+
+.palette-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .palette-item:hover {
@@ -74,6 +132,7 @@
     transform: scale(1.1); /* 마우스 올렸을 때 살짝 강조 */
     box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
 }
+
 
 /* 이미지 영역 위의 스티커 이미지 고정 사이즈 */
 .sticker-item img.sticker-img {
@@ -238,3 +297,308 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .c-btn:hover { background-color: #fbcfe8; transform: scale(1.1); }
+
+
+
+
+/* ========================================
+   [POST VIEW] 반응형 좌우 레이아웃 설정
+======================================== */
+
+/* 1. 전체 컨테이너 설정 */
+.view-container {
+    max-width: 1800px; /* PC에서 너무 퍼지지 않게 적절한 폭 설정 */
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* 2. PC 버전: 좌우 그리드 배치 */
+.post-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 600px; /* 왼쪽은 가변, 오른쪽(댓글/스티커)은 고정 */
+    gap: 1rem; /* 좌우 간격 */
+    align-items: start; /* 내용 길이에 상관없이 위쪽 정렬 */
+}
+
+/* 3. 왼쪽 영역 (게시글 상세) */
+.post-detail {
+    min-width: 0; /* 내부 Swiper가 그리드를 깨뜨리지 않도록 방지 */
+}
+
+/* post-detail-header 전체 컨테이너 */
+.post-detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: 24px; /* 요소 간의 충분한 세로 간격 */
+    padding-bottom: 0px;
+    border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+    margin: 2rem;
+}
+
+/* 제목 영역: 카테고리와 제목 사이의 간격 */
+.post-detail-header > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.post-category-badge {
+    display: inline-block;
+    width: fit-content;
+    padding: 4px 12px;
+    background-color: #F9F6F1; /* 스티커 패널과 통일감 있는 색상 */
+    color: #8B7355;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.post-detail-title {
+    font-family: "Playfair Display", serif;
+    font-size: 2.25rem; /* 제목을 시원하게 키움 */
+    font-weight: 800;
+    line-height: 1.3;
+    color: #8b7355;
+    letter-spacing: -0.02em;
+    margin: 1rem 0;
+}
+
+/* 메타 정보 영역: 작성자 정보와 액션 버튼을 양끝으로 배치 */
+.post-meta-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* 모바일 대응 */
+    gap: 16px;
+}
+
+.post-author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar {
+    width: 44px;
+    height: 44px;
+    background-color: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.author-name {
+    display: block;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #8b7355;
+}
+
+.post-date {
+    font-size: 0.875rem;
+    color: #9CA3AF;
+}
+
+/* 수정/삭제 버튼 그룹 */
+.post-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-edit {
+    background-color: #f9fafb;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-edit:hover {
+    background-color: #f3f4f6;
+}
+
+.btn-delete {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+}
+
+.post-content {
+    margin: 2rem;
+}
+
+.post-content > p{
+    text-align: justify;
+}
+
+.post-report-area{
+    display: flex;
+    justify-content: right;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.btn-back-inline{
+    display: flex;
+    gap: .5rem;
+}
+
+/* 4. 오른쪽 영역 (스티커 패널 & 댓글) */
+.comments-section {
+    width: 100%;
+    margin: 10rem 0;
+}
+
+.comments-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #5A4D41; /* 따뜻한 밤색 */
+    margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.comments-title svg {
+    width: 20px;
+    height: 20px;
+    stroke: #8B7355; /* 카테고리 배지와 통일감 있는 색상 */
+}
+
+#comment-count-text {
+    letter-spacing: -0.02em;
+}
+.comment-form {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 16px;
+    padding: 16px;
+    transition: border-color 0.2s ease;
+}
+
+.comment-form:focus-within {
+    border-color: #D6C7B6; /* 포커스 시 부드러운 코코아색 */
+}
+
+.comment-textarea {
+    width: 100%;
+    border: none;
+    resize: none;
+    font-size: 0.95rem;
+    color: #4A443F;
+    min-height: 80px;
+    outline: none;
+    background: transparent;
+    line-height: 1.6;
+}
+
+.comment-textarea::placeholder {
+    color: #BDBDBD;
+}
+
+.comment-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #F9F8F6;
+}
+
+.char-count {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+}
+
+.btn-submit-comment {
+    background-color: #8B7355;
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-submit-comment:hover {
+    background-color: #766148;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-item {
+    border: none;
+    padding: 0;
+}
+
+.comment-card {
+    background-color: #FFFFFF;
+    border: 1px solid #F0F0F0 !important;
+    border-radius: 18px !important;
+    padding: 18px 22px !important;
+    transition: transform 0.2s ease;
+}
+
+.comment-text {
+    font-size: 0.95rem;
+    color: #4A443F;
+    margin-bottom: 12px;
+}
+
+.comment-left-meta {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #8B7355;
+    margin-right: 6px;
+}
+
+/* 이미 적용되어 있는 sticky 효과 유지 및 최적화 */
+.comments-sticky-wrapper {
+    position: sticky;
+    top: calc(var(--header-height) + 20px);
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-textarea{
+    width: 100%;
+}
+
+
+@media (max-width: 1024px) {
+    .post-layout-grid {
+        grid-template-columns: 1fr; /* 1열로 변경하여 위아래 배치 */
+        gap: 40px;
+    }
+
+    .view-container {
+        padding: var(--spacing-md);
+    }
+
+    .comments-sticky-wrapper {
+        position: static; /* 모바일에서는 고정 해제 */
+    }
+
+    .postImagesSwiper {
+        max-width: 100%; /* 모바일에서 꽉 차게 */
+    }
+}
