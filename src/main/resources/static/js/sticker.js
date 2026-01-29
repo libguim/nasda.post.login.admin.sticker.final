@@ -40,7 +40,7 @@
             return true;
         }
 
-        console.error("❌ 결과: 권한 불일치 (조작 불가)");
+        // console.error("❌ 결과: 권한 불일치 (조작 불가)");
         console.groupEnd();
         return false;
     }
